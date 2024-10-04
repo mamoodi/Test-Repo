@@ -21,6 +21,12 @@ SimpleTodo is a straightforward and user-friendly todo list application designed
 
 We welcome contributions to improve SimpleTodo. Please feel free to submit pull requests or open issues for any bugs or feature requests.
 
+## Future Enhancements
+
+- Implement user authentication
+- Add task categories and tags
+- Create a mobile app version
+
 ## License
 
 This project is licensed under the MIT License.
