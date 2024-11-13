@@ -12,9 +12,20 @@
     <ul class="todos">
       <li v-for="(todo, index) in todos" :key="index">
         {{ todo }}
-        <button class="delete-btn" @click="deleteTodo(index)">×</button>
+        <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
       </li>
     </ul>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showConfirmation" class="modal-overlay">
+      <div class="modal">
+        <p>Are you sure you want to delete item?</p>
+        <div class="modal-buttons">
+          <button class="cancel-btn" @click="cancelDelete">Cancel</button>
+          <button class="confirm-btn" @click="confirmDelete">Yes</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -24,7 +35,9 @@ export default {
   data() {
     return {
       newTodo: '',
-      todos: []
+      todos: [],
+      showConfirmation: false,
+      itemToDelete: null
     }
   },
   methods: {
@@ -34,8 +47,20 @@ export default {
         this.newTodo = ''
       }
     },
-    deleteTodo(index) {
-      this.todos.splice(index, 1)
+    showDeleteConfirmation(index) {
+      this.itemToDelete = index
+      this.showConfirmation = true
+    },
+    cancelDelete() {
+      this.showConfirmation = false
+      this.itemToDelete = null
+    },
+    confirmDelete() {
+      if (this.itemToDelete !== null) {
+        this.todos.splice(this.itemToDelete, 1)
+        this.showConfirmation = false
+        this.itemToDelete = null
+      }
     }
   }
 }
@@ -100,5 +125,53 @@ button:hover {
 .delete-btn:hover {
   color: #cc0000;
   background-color: transparent;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  text-align: center;
+}
+
+.modal p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+.confirm-btn {
+  background-color: #dc3545;
+}
+
+.confirm-btn:hover {
+  background-color: #c82333;
 }
 </style>
