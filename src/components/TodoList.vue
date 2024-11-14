@@ -11,8 +11,14 @@
     </div>
     <ul class="todos">
       <li v-for="(todo, index) in todos" :key="index">
-        {{ todo }}
-        <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
+        <div class="todo-text">
+          <span v-if="!isEditing || editIndex !== index">{{ todo }}</span>
+          <input v-else type="text" v-model="editTodo" @keyup.enter="confirmEdit(index)" @blur="confirmEdit(index)" />
+        </div>
+        <div class="todo-actions">
+          <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
+          <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
+        </div>
       </li>
     </ul>
 
@@ -37,7 +43,10 @@ export default {
       newTodo: '',
       todos: [],
       showConfirmation: false,
-      itemToDelete: null
+      itemToDelete: null,
+      isEditing: false,
+      editIndex: null,
+      editTodo: ''
     }
   },
   methods: {
@@ -61,6 +70,19 @@ export default {
         this.showConfirmation = false
         this.itemToDelete = null
       }
+    },
+    startEdit(index) {
+      this.isEditing = true
+      this.editIndex = index
+      this.editTodo = this.todos[index]
+    },
+    confirmEdit(index) {
+      if (this.editTodo.trim()) {
+        this.todos.splice(index, 1, this.editTodo.trim())
+      }
+      this.isEditing = false
+      this.editIndex = null
+      this.editTodo = ''
     }
   }
 }
@@ -110,6 +132,7 @@ button:hover {
   border-radius: 4px;
   display: flex;
   justify-content: space-between;
+  gap: 10px;
   align-items: center;
 }
 
@@ -151,6 +174,14 @@ button:hover {
 .modal p {
   margin-bottom: 20px;
   font-size: 16px;
+.todo-text {
+  flex: 1;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 10px;
+}
 }
 
 .modal-buttons {
