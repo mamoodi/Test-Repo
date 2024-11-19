@@ -21,14 +21,16 @@
         </div>
       </li>
     </ul>
+    
+    <button v-if="todos.length > 0" class="clear-list-btn" @click="showClearConfirmation">Clear List</button>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Confirmation Modal -->
     <div v-if="showConfirmation" class="modal-overlay">
       <div class="modal">
-        <p>Are you sure you want to delete item?</p>
+        <p>{{ confirmationMessage }}</p>
         <div class="modal-buttons">
-          <button class="cancel-btn" @click="cancelDelete">Cancel</button>
-          <button class="confirm-btn" @click="confirmDelete">Yes</button>
+          <button class="cancel-btn" @click="cancelAction">Cancel</button>
+          <button class="confirm-btn" @click="confirmAction">Yes</button>
         </div>
       </div>
     </div>
@@ -46,7 +48,9 @@ export default {
       itemToDelete: null,
       isEditing: false,
       editIndex: null,
-      editTodo: ''
+      editTodo: '',
+      confirmationMessage: '',
+      actionType: '' // 'delete' or 'clear'
     }
   },
   methods: {
@@ -59,17 +63,28 @@ export default {
     showDeleteConfirmation(index) {
       this.itemToDelete = index
       this.showConfirmation = true
+      this.confirmationMessage = 'Are you sure you want to delete item?'
+      this.actionType = 'delete'
     },
-    cancelDelete() {
+    showClearConfirmation() {
+      this.showConfirmation = true
+      this.confirmationMessage = 'Are you sure you want to clear your TODO list?'
+      this.actionType = 'clear'
+    },
+    cancelAction() {
       this.showConfirmation = false
       this.itemToDelete = null
+      this.actionType = ''
     },
-    confirmDelete() {
-      if (this.itemToDelete !== null) {
+    confirmAction() {
+      if (this.actionType === 'delete' && this.itemToDelete !== null) {
         this.todos.splice(this.itemToDelete, 1)
-        this.showConfirmation = false
-        this.itemToDelete = null
+      } else if (this.actionType === 'clear') {
+        this.todos = []
       }
+      this.showConfirmation = false
+      this.itemToDelete = null
+      this.actionType = ''
     },
     startEdit(index) {
       this.isEditing = true
@@ -203,6 +218,16 @@ button:hover {
 }
 
 .confirm-btn:hover {
+  background-color: #c82333;
+}
+
+.clear-list-btn {
+  margin-top: 20px;
+  background-color: #dc3545;
+  width: 100%;
+}
+
+.clear-list-btn:hover {
   background-color: #c82333;
 }
 </style>
