@@ -12,11 +12,25 @@
     <ul class="todos">
       <li v-for="(todo, index) in todos" :key="index">
         <div class="todo-text">
-          <span v-if="!isEditing || editIndex !== index">{{ todo }}</span>
-          <input v-else type="text" v-model="editTodo" @keyup.enter="confirmEdit(index)" @blur="confirmEdit(index)" />
+          <span 
+            v-if="!isEditing || editIndex !== index"
+            :class="{ completed: todo.completed }"
+          >{{ todo.text }}</span>
+          <input 
+            v-else 
+            type="text" 
+            v-model="editTodo" 
+            @keyup.enter="confirmEdit(index)" 
+            @blur="confirmEdit(index)" 
+          />
         </div>
         <div class="todo-actions">
           <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
+          <button 
+            class="complete-btn" 
+            :class="{ 'complete-btn-active': todo.completed }"
+            @click="toggleComplete(index)"
+          >✓</button>
           <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
         </div>
       </li>
@@ -43,7 +57,7 @@ export default {
   data() {
     return {
       newTodo: '',
-      todos: [],
+      todos: [], // Array of {text: string, completed: boolean}
       showConfirmation: false,
       itemToDelete: null,
       isEditing: false,
@@ -56,7 +70,10 @@ export default {
   methods: {
     addTodo() {
       if (this.newTodo.trim()) {
-        this.todos.push(this.newTodo.trim())
+        this.todos.push({
+          text: this.newTodo.trim(),
+          completed: false
+        })
         this.newTodo = ''
       }
     },
@@ -89,15 +106,18 @@ export default {
     startEdit(index) {
       this.isEditing = true
       this.editIndex = index
-      this.editTodo = this.todos[index]
+      this.editTodo = this.todos[index].text
     },
     confirmEdit(index) {
       if (this.editTodo.trim()) {
-        this.todos.splice(index, 1, this.editTodo.trim())
+        this.todos[index].text = this.editTodo.trim()
       }
       this.isEditing = false
       this.editIndex = null
       this.editTodo = ''
+    },
+    toggleComplete(index) {
+      this.todos[index].completed = !this.todos[index].completed
     }
   }
 }
@@ -189,14 +209,50 @@ button:hover {
 .modal p {
   margin-bottom: 20px;
   font-size: 16px;
+}
+
 .todo-text {
   flex: 1;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: #888;
 }
 
 .todo-actions {
   display: flex;
   gap: 10px;
 }
+
+.edit-btn, .complete-btn, .delete-btn {
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.edit-btn {
+  color: #42b983;
+}
+
+.edit-btn:hover {
+  color: #3aa876;
+  background-color: transparent;
+}
+
+.complete-btn {
+  color: #888;
+}
+
+.complete-btn:hover {
+  color: #42b983;
+  background-color: transparent;
+}
+
+.complete-btn-active {
+  color: #42b983;
 }
 
 .modal-buttons {
