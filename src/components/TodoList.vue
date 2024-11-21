@@ -209,17 +209,10 @@ button:hover {
 .modal p {
   margin-bottom: 20px;
   font-size: 16px;
-.todo-text {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-.todo-text input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
+.todo-text {
+  flex: 1;
 }
 
 .completed {
@@ -231,6 +224,35 @@ button:hover {
   display: flex;
   gap: 10px;
 }
+
+.edit-btn, .complete-btn, .delete-btn {
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.edit-btn {
+  color: #42b983;
+}
+
+.edit-btn:hover {
+  color: #3aa876;
+  background-color: transparent;
+}
+
+.complete-btn {
+  color: #888;
+}
+
+.complete-btn:hover {
+  color: #42b983;
+  background-color: transparent;
+}
+
+.complete-btn-active {
+  color: #42b983;
 }
 
 .modal-buttons {
