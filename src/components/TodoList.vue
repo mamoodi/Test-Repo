@@ -12,11 +12,6 @@
     <ul class="todos">
       <li v-for="(todo, index) in todos" :key="index">
         <div class="todo-text">
-          <input 
-            type="checkbox" 
-            :checked="todo.completed"
-            @change="toggleComplete(index)"
-          >
           <span 
             v-if="!isEditing || editIndex !== index"
             :class="{ completed: todo.completed }"
@@ -31,6 +26,11 @@
         </div>
         <div class="todo-actions">
           <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
+          <button 
+            class="complete-btn" 
+            :class="{ 'complete-btn-active': todo.completed }"
+            @click="toggleComplete(index)"
+          >✓</button>
           <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
         </div>
       </li>
