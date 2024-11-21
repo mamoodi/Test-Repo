@@ -12,8 +12,22 @@
     <ul class="todos">
       <li v-for="(todo, index) in todos" :key="index">
         <div class="todo-text">
-          <span v-if="!isEditing || editIndex !== index">{{ todo }}</span>
-          <input v-else type="text" v-model="editTodo" @keyup.enter="confirmEdit(index)" @blur="confirmEdit(index)" />
+          <input 
+            type="checkbox" 
+            :checked="todo.completed"
+            @change="toggleComplete(index)"
+          >
+          <span 
+            v-if="!isEditing || editIndex !== index"
+            :class="{ completed: todo.completed }"
+          >{{ todo.text }}</span>
+          <input 
+            v-else 
+            type="text" 
+            v-model="editTodo" 
+            @keyup.enter="confirmEdit(index)" 
+            @blur="confirmEdit(index)" 
+          />
         </div>
         <div class="todo-actions">
           <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
@@ -43,7 +57,7 @@ export default {
   data() {
     return {
       newTodo: '',
-      todos: [],
+      todos: [], // Array of {text: string, completed: boolean}
       showConfirmation: false,
       itemToDelete: null,
       isEditing: false,
@@ -56,7 +70,10 @@ export default {
   methods: {
     addTodo() {
       if (this.newTodo.trim()) {
-        this.todos.push(this.newTodo.trim())
+        this.todos.push({
+          text: this.newTodo.trim(),
+          completed: false
+        })
         this.newTodo = ''
       }
     },
@@ -89,15 +106,18 @@ export default {
     startEdit(index) {
       this.isEditing = true
       this.editIndex = index
-      this.editTodo = this.todos[index]
+      this.editTodo = this.todos[index].text
     },
     confirmEdit(index) {
       if (this.editTodo.trim()) {
-        this.todos.splice(index, 1, this.editTodo.trim())
+        this.todos[index].text = this.editTodo.trim()
       }
       this.isEditing = false
       this.editIndex = null
       this.editTodo = ''
+    },
+    toggleComplete(index) {
+      this.todos[index].completed = !this.todos[index].completed
     }
   }
 }
@@ -191,6 +211,20 @@ button:hover {
   font-size: 16px;
 .todo-text {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.todo-text input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: #888;
 }
 
 .todo-actions {
