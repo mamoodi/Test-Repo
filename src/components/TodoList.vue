@@ -36,7 +36,10 @@
       </li>
     </ul>
     
-    <button v-if="todos.length > 0" class="clear-list-btn" @click="showClearConfirmation">Clear List</button>
+    <div class="list-actions" v-if="todos.length > 0">
+      <button class="clear-list-btn" @click="showClearConfirmation">Clear List</button>
+      <button class="export-btn" @click="exportToCsv">Export to CSV</button>
+    </div>
 
     <!-- Confirmation Modal -->
     <div v-if="showConfirmation" class="modal-overlay">
@@ -118,6 +121,30 @@ export default {
     },
     toggleComplete(index) {
       this.todos[index].completed = !this.todos[index].completed
+    },
+    exportToCsv() {
+      // Create CSV content
+      const headers = 'Task,Status\n'
+      const rows = this.todos.map(todo => {
+        const status = todo.completed ? 'Completed' : 'Pending'
+        // Escape quotes and handle commas in text
+        const escapedText = todo.text.includes('"') ? 
+          `"${todo.text.replace(/"/g, '""')}"` : 
+          todo.text.includes(',') ? `"${todo.text}"` : todo.text
+        return `${escapedText},${status}`
+      }).join('\n')
+      const csvContent = headers + rows
+
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', 'todo-list.csv')
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 }
@@ -278,12 +305,28 @@ button:hover {
 }
 
 .clear-list-btn {
-  margin-top: 20px;
   background-color: #dc3545;
-  width: 100%;
 }
 
 .clear-list-btn:hover {
   background-color: #c82333;
+}
+
+.list-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.list-actions button {
+  flex: 1;
+}
+
+.export-btn {
+  background-color: #17a2b8;
+}
+
+.export-btn:hover {
+  background-color: #138496;
 }
 </style>
