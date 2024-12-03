@@ -5,35 +5,23 @@
         type="text" 
         v-model="newTodo" 
         placeholder="Add a new todo"
-        @keyup.enter="addTodo"
+        @keyup.enter="handleAddTodo"
       >
-      <button @click="addTodo">Add</button>
+      <button @click="handleAddTodo">Add</button>
     </div>
     <ul class="todos">
-      <li v-for="(todo, index) in todos" :key="index">
-        <div class="todo-text">
-          <span 
-            v-if="!isEditing || editIndex !== index"
-            :class="{ completed: todo.completed }"
-          >{{ todo.text }}</span>
-          <input 
-            v-else 
-            type="text" 
-            v-model="editTodo" 
-            @keyup.enter="confirmEdit(index)" 
-            @blur="confirmEdit(index)" 
-          />
-        </div>
-        <div class="todo-actions">
-          <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
-          <button 
-            class="complete-btn" 
-            :class="{ 'complete-btn-active': todo.completed }"
-            @click="toggleComplete(index)"
-          >✓</button>
-          <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
-        </div>
-      </li>
+      <todo-item
+        v-for="todo in todos"
+        :key="todo.id"
+        :todo="todo"
+        @delete="showDeleteConfirmation(todo.id)"
+        @edit="(text) => handleEditTodo(todo.id, text)"
+        @toggle-complete="handleToggleTodoComplete(todo.id)"
+        @add-subtask="handleAddSubtask(todo.id)"
+        @delete-subtask="(subtaskId) => showDeleteSubtaskConfirmation(todo.id, subtaskId)"
+        @edit-subtask="(subtaskId, text) => handleEditSubtask(todo.id, subtaskId, text)"
+        @toggle-subtask-complete="(subtaskId) => handleToggleSubtaskComplete(todo.id, subtaskId)"
+      />
     </ul>
     
     <div class="list-actions" v-if="todos.length > 0">
@@ -55,97 +43,143 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex';
+import TodoItem from './TodoItem.vue';
+
 export default {
   name: 'TodoList',
+  components: {
+    TodoItem
+  },
   data() {
     return {
       newTodo: '',
-      todos: [], // Array of {text: string, completed: boolean}
       showConfirmation: false,
       itemToDelete: null,
-      isEditing: false,
-      editIndex: null,
-      editTodo: '',
       confirmationMessage: '',
-      actionType: '' // 'delete' or 'clear'
+      actionType: '', // 'delete', 'clear', or 'deleteSubtask'
+      parentId: null,
+      subtaskId: null
     }
   },
+  computed: {
+    ...mapState(['todos'])
+  },
   methods: {
-    addTodo() {
+    ...mapActions([
+      'addTodo',
+      'deleteTodo',
+      'editTodo',
+      'toggleTodoComplete',
+      'addSubtask',
+      'deleteSubtask',
+      'editSubtask',
+      'toggleSubtaskComplete',
+      'clearTodos',
+      'loadTodos',
+      'saveTodos'
+    ]),
+    handleAddTodo() {
       if (this.newTodo.trim()) {
-        this.todos.push({
-          text: this.newTodo.trim(),
-          completed: false
-        })
-        this.newTodo = ''
+        this.addTodo(this.newTodo.trim());
+        this.newTodo = '';
+        this.saveTodos();
       }
     },
-    showDeleteConfirmation(index) {
-      this.itemToDelete = index
-      this.showConfirmation = true
-      this.confirmationMessage = 'Are you sure you want to delete item?'
-      this.actionType = 'delete'
+    handleAddSubtask(parentId) {
+      const text = prompt('Enter subtask:');
+      if (text && text.trim()) {
+        this.addSubtask({ parentId, text: text.trim() });
+        this.saveTodos();
+      }
+    },
+    showDeleteConfirmation(todoId) {
+      this.itemToDelete = todoId;
+      this.showConfirmation = true;
+      this.confirmationMessage = 'Are you sure you want to delete this item?';
+      this.actionType = 'delete';
+    },
+    showDeleteSubtaskConfirmation(parentId, subtaskId) {
+      this.parentId = parentId;
+      this.subtaskId = subtaskId;
+      this.showConfirmation = true;
+      this.confirmationMessage = 'Are you sure you want to delete this subtask?';
+      this.actionType = 'deleteSubtask';
     },
     showClearConfirmation() {
-      this.showConfirmation = true
-      this.confirmationMessage = 'Are you sure you want to clear your TODO list?'
-      this.actionType = 'clear'
+      this.showConfirmation = true;
+      this.confirmationMessage = 'Are you sure you want to clear your TODO list?';
+      this.actionType = 'clear';
     },
     cancelAction() {
-      this.showConfirmation = false
-      this.itemToDelete = null
-      this.actionType = ''
+      this.showConfirmation = false;
+      this.itemToDelete = null;
+      this.parentId = null;
+      this.subtaskId = null;
+      this.actionType = '';
     },
-    confirmAction() {
-      if (this.actionType === 'delete' && this.itemToDelete !== null) {
-        this.todos.splice(this.itemToDelete, 1)
+    async confirmAction() {
+      if (this.actionType === 'delete' && this.itemToDelete) {
+        await this.deleteTodo(this.itemToDelete);
       } else if (this.actionType === 'clear') {
-        this.todos = []
+        await this.clearTodos();
+      } else if (this.actionType === 'deleteSubtask' && this.parentId && this.subtaskId) {
+        await this.deleteSubtask({ parentId: this.parentId, subtaskId: this.subtaskId });
       }
-      this.showConfirmation = false
-      this.itemToDelete = null
-      this.actionType = ''
+      this.saveTodos();
+      this.cancelAction();
     },
-    startEdit(index) {
-      this.isEditing = true
-      this.editIndex = index
-      this.editTodo = this.todos[index].text
+    handleEditTodo(todoId, text) {
+      this.editTodo({ todoId, text });
+      this.saveTodos();
     },
-    confirmEdit(index) {
-      if (this.editTodo.trim()) {
-        this.todos[index].text = this.editTodo.trim()
-      }
-      this.isEditing = false
-      this.editIndex = null
-      this.editTodo = ''
+    handleToggleTodoComplete(todoId) {
+      this.toggleTodoComplete(todoId);
+      this.saveTodos();
     },
-    toggleComplete(index) {
-      this.todos[index].completed = !this.todos[index].completed
+    handleEditSubtask(parentId, subtaskId, text) {
+      this.editSubtask({ parentId, subtaskId, text });
+      this.saveTodos();
+    },
+    handleToggleSubtaskComplete(parentId, subtaskId) {
+      this.toggleSubtaskComplete({ parentId, subtaskId });
+      this.saveTodos();
     },
     exportToCsv() {
-      // Create CSV content
-      const headers = 'Task,Status\n'
+      const headers = 'Task,Status\n';
       const rows = this.todos.map(todo => {
-        const status = todo.completed ? 'Completed' : 'Pending'
-        // Escape quotes and handle commas in text
+        const status = todo.completed ? 'Completed' : 'Pending';
         const escapedText = todo.text.includes('"') ? 
           `"${todo.text.replace(/"/g, '""')}"` : 
-          todo.text.includes(',') ? `"${todo.text}"` : todo.text
-        return `${escapedText},${status}`
-      }).join('\n')
-      const csvContent = headers + rows
+          todo.text.includes(',') ? `"${todo.text}"` : todo.text;
+        let row = `${escapedText},${status}`;
 
-      // Create and download the file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', 'todo-list.csv')
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+        if (todo.subtasks && todo.subtasks.length > 0) {
+          todo.subtasks.forEach(subtask => {
+            const subStatus = subtask.completed ? 'Completed' : 'Pending';
+            const escapedSubText = subtask.text.includes('"') ? 
+              `"${subtask.text.replace(/"/g, '""')}"` : 
+              subtask.text.includes(',') ? `"${subtask.text}"` : subtask.text;
+            row += `\n  - ${escapedSubText},${subStatus}`;
+          });
+        }
+        return row;
+      }).join('\n');
+      
+      const csvContent = headers + rows;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'todo-list.csv');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
+  },
+  created() {
+    this.loadTodos();
   }
 }
 </script>
@@ -187,31 +221,6 @@ button:hover {
   padding: 0;
 }
 
-.todos li {
-  padding: 10px;
-  background-color: #f8f8f8;
-  margin-bottom: 5px;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-.delete-btn {
-  background-color: transparent;
-  color: #ff4444;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0 8px;
-}
-
-.delete-btn:hover {
-  color: #cc0000;
-  background-color: transparent;
-}
-
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -236,50 +245,6 @@ button:hover {
 .modal p {
   margin-bottom: 20px;
   font-size: 16px;
-}
-
-.todo-text {
-  flex: 1;
-}
-
-.completed {
-  text-decoration: line-through;
-  color: #888;
-}
-
-.todo-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.edit-btn, .complete-btn, .delete-btn {
-  background-color: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0 8px;
-}
-
-.edit-btn {
-  color: #42b983;
-}
-
-.edit-btn:hover {
-  color: #3aa876;
-  background-color: transparent;
-}
-
-.complete-btn {
-  color: #888;
-}
-
-.complete-btn:hover {
-  color: #42b983;
-  background-color: transparent;
-}
-
-.complete-btn-active {
-  color: #42b983;
 }
 
 .modal-buttons {
