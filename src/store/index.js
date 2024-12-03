@@ -39,6 +39,24 @@ export default createStore({
         parent.removeSubtask(subtaskId);
       }
     },
+    EDIT_SUBTASK(state, { parentId, subtaskId, text }) {
+      const parent = state.todos.find(todo => todo.id === parentId);
+      if (parent && parent.subtasks) {
+        const subtask = parent.subtasks.find(sub => sub.id === subtaskId);
+        if (subtask) {
+          subtask.edit(text);
+        }
+      }
+    },
+    TOGGLE_SUBTASK_COMPLETE(state, { parentId, subtaskId }) {
+      const parent = state.todos.find(todo => todo.id === parentId);
+      if (parent && parent.subtasks) {
+        const subtask = parent.subtasks.find(sub => sub.id === subtaskId);
+        if (subtask) {
+          subtask.toggleComplete();
+        }
+      }
+    },
     CLEAR_TODOS(state) {
       state.todos = [];
     },
@@ -65,6 +83,12 @@ export default createStore({
     },
     deleteSubtask({ commit }, { parentId, subtaskId }) {
       commit('DELETE_SUBTASK', { parentId, subtaskId });
+    },
+    editSubtask({ commit }, { parentId, subtaskId, text }) {
+      commit('EDIT_SUBTASK', { parentId, subtaskId, text });
+    },
+    toggleSubtaskComplete({ commit }, { parentId, subtaskId }) {
+      commit('TOGGLE_SUBTASK_COMPLETE', { parentId, subtaskId });
     },
     clearTodos({ commit }) {
       commit('CLEAR_TODOS');

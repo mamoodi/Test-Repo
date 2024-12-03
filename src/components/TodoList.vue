@@ -19,8 +19,8 @@
         @toggle-complete="handleToggleTodoComplete(todo.id)"
         @add-subtask="handleAddSubtask(todo.id)"
         @delete-subtask="(subtaskId) => showDeleteSubtaskConfirmation(todo.id, subtaskId)"
-        @edit-subtask="(subtaskId, text) => handleEditTodo(todo.id, text)"
-        @toggle-subtask-complete="(subtaskId) => handleToggleTodoComplete(todo.id, subtaskId)"
+        @edit-subtask="(subtaskId, text) => handleEditSubtask(todo.id, subtaskId, text)"
+        @toggle-subtask-complete="(subtaskId) => handleToggleSubtaskComplete(todo.id, subtaskId)"
       />
     </ul>
     
@@ -73,6 +73,8 @@ export default {
       'toggleTodoComplete',
       'addSubtask',
       'deleteSubtask',
+      'editSubtask',
+      'toggleSubtaskComplete',
       'clearTodos',
       'loadTodos',
       'saveTodos'
@@ -133,6 +135,14 @@ export default {
     },
     handleToggleTodoComplete(todoId) {
       this.toggleTodoComplete(todoId);
+      this.saveTodos();
+    },
+    handleEditSubtask(parentId, subtaskId, text) {
+      this.editSubtask({ parentId, subtaskId, text });
+      this.saveTodos();
+    },
+    handleToggleSubtaskComplete(parentId, subtaskId) {
+      this.toggleSubtaskComplete({ parentId, subtaskId });
       this.saveTodos();
     },
     exportToCsv() {
