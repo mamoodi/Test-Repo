@@ -32,7 +32,34 @@
             @click="toggleComplete(index)"
           >✓</button>
           <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
+          <button v-if="!todo.isSubtask" class="add-subtask-btn" @click="addSubtask(index)">+</button>
         </div>
+        <ul v-if="todo.subtasks && todo.subtasks.length > 0" class="subtasks">
+          <li v-for="(subtask, subIndex) in todo.subtasks" :key="subIndex" class="subtask-item">
+            <div class="todo-text">
+              <span 
+                v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)"
+                :class="{ completed: subtask.completed }"
+              >{{ subtask.text }}</span>
+              <input 
+                v-else 
+                type="text" 
+                v-model="editTodo" 
+                @keyup.enter="confirmEdit(`${index}-${subIndex}`)" 
+                @blur="confirmEdit(`${index}-${subIndex}`)" 
+              />
+            </div>
+            <div class="todo-actions">
+              <button v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)" class="edit-btn" @click="startEdit(`${index}-${subIndex}`)">✎</button>
+              <button 
+                class="complete-btn" 
+                :class="{ 'complete-btn-active': subtask.completed }"
+                @click="toggleSubtaskComplete(index, subIndex)"
+              >✓</button>
+              <button class="delete-btn" @click="showDeleteSubtaskConfirmation(index, subIndex)">×</button>
+            </div>
+          </li>
+        </ul>
       </li>
     </ul>
     
@@ -60,14 +87,17 @@ export default {
   data() {
     return {
       newTodo: '',
-      todos: [], // Array of {text: string, completed: boolean}
+      newSubtask: '',
+      todos: [], // Array of {text: string, completed: boolean, subtasks: Array}
       showConfirmation: false,
       itemToDelete: null,
       isEditing: false,
       editIndex: null,
       editTodo: '',
       confirmationMessage: '',
-      actionType: '' // 'delete' or 'clear'
+      actionType: '', // 'delete', 'clear', or 'deleteSubtask'
+      parentIndex: null,
+      subTaskIndex: null
     }
   },
   methods: {
@@ -75,9 +105,24 @@ export default {
       if (this.newTodo.trim()) {
         this.todos.push({
           text: this.newTodo.trim(),
-          completed: false
+          completed: false,
+          subtasks: [],
+          isSubtask: false
         })
         this.newTodo = ''
+      }
+    },
+    addSubtask(parentIndex) {
+      const text = prompt('Enter subtask:')
+      if (text && text.trim()) {
+        if (!this.todos[parentIndex].subtasks) {
+          this.todos[parentIndex].subtasks = []
+        }
+        this.todos[parentIndex].subtasks.push({
+          text: text.trim(),
+          completed: false,
+          isSubtask: true
+        })
       }
     },
     showDeleteConfirmation(index) {
@@ -85,6 +130,13 @@ export default {
       this.showConfirmation = true
       this.confirmationMessage = 'Are you sure you want to delete item?'
       this.actionType = 'delete'
+    },
+    showDeleteSubtaskConfirmation(parentIndex, subIndex) {
+      this.parentIndex = parentIndex
+      this.subTaskIndex = subIndex
+      this.showConfirmation = true
+      this.confirmationMessage = 'Are you sure you want to delete this subtask?'
+      this.actionType = 'deleteSubtask'
     },
     showClearConfirmation() {
       this.showConfirmation = true
@@ -101,19 +153,33 @@ export default {
         this.todos.splice(this.itemToDelete, 1)
       } else if (this.actionType === 'clear') {
         this.todos = []
+      } else if (this.actionType === 'deleteSubtask' && this.parentIndex !== null && this.subTaskIndex !== null) {
+        this.todos[this.parentIndex].subtasks.splice(this.subTaskIndex, 1)
       }
       this.showConfirmation = false
       this.itemToDelete = null
+      this.parentIndex = null
+      this.subTaskIndex = null
       this.actionType = ''
     },
     startEdit(index) {
       this.isEditing = true
       this.editIndex = index
-      this.editTodo = this.todos[index].text
+      if (typeof index === 'string' && index.includes('-')) {
+        const [parentIndex, subIndex] = index.split('-').map(Number)
+        this.editTodo = this.todos[parentIndex].subtasks[subIndex].text
+      } else {
+        this.editTodo = this.todos[index].text
+      }
     },
     confirmEdit(index) {
       if (this.editTodo.trim()) {
-        this.todos[index].text = this.editTodo.trim()
+        if (typeof index === 'string' && index.includes('-')) {
+          const [parentIndex, subIndex] = index.split('-').map(Number)
+          this.todos[parentIndex].subtasks[subIndex].text = this.editTodo.trim()
+        } else {
+          this.todos[index].text = this.editTodo.trim()
+        }
       }
       this.isEditing = false
       this.editIndex = null
@@ -121,6 +187,9 @@ export default {
     },
     toggleComplete(index) {
       this.todos[index].completed = !this.todos[index].completed
+    },
+    toggleSubtaskComplete(parentIndex, subIndex) {
+      this.todos[parentIndex].subtasks[subIndex].completed = !this.todos[parentIndex].subtasks[subIndex].completed
     },
     exportToCsv() {
       // Create CSV content
@@ -131,7 +200,19 @@ export default {
         const escapedText = todo.text.includes('"') ? 
           `"${todo.text.replace(/"/g, '""')}"` : 
           todo.text.includes(',') ? `"${todo.text}"` : todo.text
-        return `${escapedText},${status}`
+        let row = `${escapedText},${status}`
+
+        // Add subtasks
+        if (todo.subtasks && todo.subtasks.length > 0) {
+          todo.subtasks.forEach(subtask => {
+            const subStatus = subtask.completed ? 'Completed' : 'Pending'
+            const escapedSubText = subtask.text.includes('"') ? 
+              `"${subtask.text.replace(/"/g, '""')}"` : 
+              subtask.text.includes(',') ? `"${subtask.text}"` : subtask.text
+            row += `\n  - ${escapedSubText},${subStatus}`
+          })
+        }
+        return row
       }).join('\n')
       const csvContent = headers + rows
 
@@ -326,7 +407,29 @@ button:hover {
   background-color: #17a2b8;
 }
 
-.export-btn:hover {
-  background-color: #138496;
+.subtasks {
+  list-style-type: none;
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.subtask-item {
+  margin-left: 20px;
+  border-left: 2px solid #42b983;
+  padding-left: 10px;
+}
+
+.add-subtask-btn {
+  background-color: transparent;
+  color: #42b983;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.add-subtask-btn:hover {
+  color: #3aa876;
+  background-color: transparent;
 }
 </style>
