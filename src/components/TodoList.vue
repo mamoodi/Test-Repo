@@ -10,53 +10,57 @@
       <button @click="addTodo">Add</button>
     </div>
     <ul class="todos">
-      <li v-for="(todo, index) in todos" :key="index">
-        <div class="todo-text">
-          <span 
-            v-if="!isEditing || editIndex !== index"
-            :class="{ completed: todo.completed }"
-          >{{ todo.text }}</span>
-          <input 
-            v-else 
-            type="text" 
-            v-model="editTodo" 
-            @keyup.enter="confirmEdit(index)" 
-            @blur="confirmEdit(index)" 
-          />
-        </div>
-        <div class="todo-actions">
-          <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
-          <button 
-            class="complete-btn" 
-            :class="{ 'complete-btn-active': todo.completed }"
-            @click="toggleComplete(index)"
-          >✓</button>
-          <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
-          <button v-if="!todo.isSubtask" class="add-subtask-btn" @click="addSubtask(index)">+</button>
+      <li v-for="(todo, index) in todos" :key="index" class="todo-item">
+        <div class="todo-container">
+          <div class="todo-text">
+            <span 
+              v-if="!isEditing || editIndex !== index"
+              :class="{ completed: todo.completed }"
+            >{{ todo.text }}</span>
+            <input 
+              v-else 
+              type="text" 
+              v-model="editTodo" 
+              @keyup.enter="confirmEdit(index)" 
+              @blur="confirmEdit(index)" 
+            />
+          </div>
+          <div class="todo-actions">
+            <button v-if="!isEditing || editIndex !== index" class="edit-btn" @click="startEdit(index)">✎</button>
+            <button 
+              class="complete-btn" 
+              :class="{ 'complete-btn-active': todo.completed }"
+              @click="toggleComplete(index)"
+            >✓</button>
+            <button class="delete-btn" @click="showDeleteConfirmation(index)">×</button>
+            <button v-if="!todo.isSubtask" class="add-subtask-btn" @click="addSubtask(index)">+</button>
+          </div>
         </div>
         <ul v-if="todo.subtasks && todo.subtasks.length > 0" class="subtasks">
           <li v-for="(subtask, subIndex) in todo.subtasks" :key="subIndex" class="subtask-item">
-            <div class="todo-text">
-              <span 
-                v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)"
-                :class="{ completed: subtask.completed }"
-              >{{ subtask.text }}</span>
-              <input 
-                v-else 
-                type="text" 
-                v-model="editTodo" 
-                @keyup.enter="confirmEdit(`${index}-${subIndex}`)" 
-                @blur="confirmEdit(`${index}-${subIndex}`)" 
-              />
-            </div>
-            <div class="todo-actions">
-              <button v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)" class="edit-btn" @click="startEdit(`${index}-${subIndex}`)">✎</button>
-              <button 
-                class="complete-btn" 
-                :class="{ 'complete-btn-active': subtask.completed }"
-                @click="toggleSubtaskComplete(index, subIndex)"
-              >✓</button>
-              <button class="delete-btn" @click="showDeleteSubtaskConfirmation(index, subIndex)">×</button>
+            <div class="todo-container">
+              <div class="todo-text">
+                <span 
+                  v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)"
+                  :class="{ completed: subtask.completed }"
+                >{{ subtask.text }}</span>
+                <input 
+                  v-else 
+                  type="text" 
+                  v-model="editTodo" 
+                  @keyup.enter="confirmEdit(`${index}-${subIndex}`)" 
+                  @blur="confirmEdit(`${index}-${subIndex}`)" 
+                />
+              </div>
+              <div class="todo-actions">
+                <button v-if="!isEditing || (editIndex !== `${index}-${subIndex}`)" class="edit-btn" @click="startEdit(`${index}-${subIndex}`)">✎</button>
+                <button 
+                  class="complete-btn" 
+                  :class="{ 'complete-btn-active': subtask.completed }"
+                  @click="toggleSubtaskComplete(index, subIndex)"
+                >✓</button>
+                <button class="delete-btn" @click="showDeleteSubtaskConfirmation(index, subIndex)">×</button>
+              </div>
             </div>
           </li>
         </ul>
@@ -407,16 +411,49 @@ button:hover {
   background-color: #17a2b8;
 }
 
+.todo-item {
+  margin-bottom: 10px;
+}
+
+.todo-container {
+  padding: 10px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
 .subtasks {
   list-style-type: none;
-  padding-left: 20px;
+  padding-left: 30px;
   margin-top: 5px;
 }
 
 .subtask-item {
-  margin-left: 20px;
-  border-left: 2px solid #42b983;
-  padding-left: 10px;
+  margin-top: 5px;
+  position: relative;
+}
+
+.subtask-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 0;
+  bottom: 50%;
+  width: 2px;
+  background-color: #42b983;
+}
+
+.subtask-item::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  background-color: #42b983;
 }
 
 .add-subtask-btn {
