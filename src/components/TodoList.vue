@@ -411,8 +411,15 @@ button:hover {
   background-color: #17a2b8;
 }
 
+.todos {
+  list-style-type: none;
+  padding: 0;
+}
+
 .todo-item {
   margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .todo-container {
@@ -425,10 +432,20 @@ button:hover {
   align-items: center;
 }
 
+.todo-text {
+  flex: 1;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .subtasks {
   list-style-type: none;
   padding-left: 30px;
   margin-top: 5px;
+  width: 100%;
 }
 
 .subtask-item {
