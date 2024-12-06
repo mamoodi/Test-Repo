@@ -81,16 +81,34 @@ export default {
     ]),
     handleAddTodo() {
       if (this.newTodo.trim()) {
-        this.addTodo(this.newTodo.trim());
-        this.newTodo = '';
-        this.saveTodos();
+        try {
+          this.addTodo(this.newTodo.trim());
+          this.newTodo = '';
+          this.saveTodos();
+        } catch (error) {
+          if (error.message === 'Item already exists') {
+            this.$toast.error('Item already exists', {
+              position: 'top-right',
+              timeout: 3000
+            });
+          }
+        }
       }
     },
     handleAddSubtask(parentId) {
       const text = prompt('Enter subtask:');
       if (text && text.trim()) {
-        this.addSubtask({ parentId, text: text.trim() });
-        this.saveTodos();
+        try {
+          this.addSubtask({ parentId, text: text.trim() });
+          this.saveTodos();
+        } catch (error) {
+          if (error.message === 'Item already exists') {
+            this.$toast.error('Item already exists', {
+              position: 'top-right',
+              timeout: 3000
+            });
+          }
+        }
       }
     },
     showDeleteConfirmation(todoId) {

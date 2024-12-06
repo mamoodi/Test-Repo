@@ -65,7 +65,16 @@ export default createStore({
     }
   },
   actions: {
-    addTodo({ commit }, text) {
+    addTodo({ commit, state }, text) {
+      const normalizedText = text.toLowerCase().trim();
+      const isDuplicate = state.todos.some(todo => 
+        todo.text.toLowerCase().trim() === normalizedText
+      );
+
+      if (isDuplicate) {
+        throw new Error('Item already exists');
+      }
+
       const todo = new Todo(text);
       commit('ADD_TODO', todo);
     },
@@ -78,7 +87,19 @@ export default createStore({
     toggleTodoComplete({ commit }, todoId) {
       commit('TOGGLE_TODO_COMPLETE', todoId);
     },
-    addSubtask({ commit }, { parentId, text }) {
+    addSubtask({ commit, state }, { parentId, text }) {
+      const parent = state.todos.find(todo => todo.id === parentId);
+      if (!parent) return;
+
+      const normalizedText = text.toLowerCase().trim();
+      const isDuplicate = parent.subtasks.some(subtask => 
+        subtask.text.toLowerCase().trim() === normalizedText
+      );
+
+      if (isDuplicate) {
+        throw new Error('Item already exists');
+      }
+
       commit('ADD_SUBTASK', { parentId, text });
     },
     deleteSubtask({ commit }, { parentId, subtaskId }) {
