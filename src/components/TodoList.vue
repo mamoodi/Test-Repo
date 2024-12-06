@@ -45,6 +45,7 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import TodoItem from './TodoItem.vue';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'TodoList',
@@ -59,7 +60,8 @@ export default {
       confirmationMessage: '',
       actionType: '', // 'delete', 'clear', or 'deleteSubtask'
       parentId: null,
-      subtaskId: null
+      subtaskId: null,
+      toast: useToast()
     }
   },
   computed: {
@@ -87,8 +89,7 @@ export default {
           this.saveTodos();
         } catch (error) {
           if (error.message === 'Item already exists') {
-            this.$toast.error('Item already exists', {
-              position: 'top-right',
+            this.toast.error('Item already exists', {
               timeout: 3000
             });
           }
@@ -103,8 +104,7 @@ export default {
           this.saveTodos();
         } catch (error) {
           if (error.message === 'Item already exists') {
-            this.$toast.error('Item already exists', {
-              position: 'top-right',
+            this.toast.error('Item already exists', {
               timeout: 3000
             });
           }
