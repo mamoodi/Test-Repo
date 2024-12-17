@@ -2,6 +2,9 @@
   <li class="todo-item">
     <div class="todo-container">
       <div class="todo-text">
+        <div class="priority-icon" v-if="!todo.isSubtask" :title="todo.priority">
+          {{ getPriorityIcon(todo.priority) }}
+        </div>
         <span 
           v-if="!isEditing"
           :class="{ completed: todo.completed }"
@@ -15,6 +18,20 @@
         />
       </div>
       <div class="todo-actions">
+        <div v-if="!todo.isSubtask" class="priority-dropdown" v-click-outside="closePriorityDropdown">
+          <button class="priority-btn" @click="togglePriorityDropdown">⚑</button>
+          <div v-if="showPriorityDropdown" class="priority-menu">
+            <div
+              v-for="priority in priorities"
+              :key="priority"
+              class="priority-item"
+              @click="changePriority(priority)"
+              :class="{ active: todo.priority === priority }"
+            >
+              {{ getPriorityIcon(priority) }} {{ priority }}
+            </div>
+          </div>
+        </div>
         <button v-if="!isEditing" class="edit-btn" @click="startEdit">✎</button>
         <button 
           class="complete-btn" 
@@ -50,8 +67,25 @@ export default {
   data() {
     return {
       isEditing: false,
-      editText: ''
+      editText: '',
+      showPriorityDropdown: false,
+      priorities: ['Critical', 'High', 'Medium', 'Low']
     }
+  },
+  directives: {
+    clickOutside: {
+      mounted(el, binding) {
+        el._clickOutside = (event) => {
+          if (!(el === event.target || el.contains(event.target))) {
+            binding.value(event);
+          }
+        };
+        document.addEventListener('click', el._clickOutside);
+      },
+      unmounted(el) {
+        document.removeEventListener('click', el._clickOutside);
+      },
+    },
   },
   methods: {
     startEdit() {
@@ -67,6 +101,25 @@ export default {
     },
     toggleComplete() {
       this.$emit('toggle-complete');
+    },
+    getPriorityIcon(priority) {
+      switch (priority) {
+        case 'Critical': return '❗';
+        case 'High': return '⚡';
+        case 'Medium': return '⚑';
+        case 'Low': return '↓';
+        default: return '⚑';
+      }
+    },
+    togglePriorityDropdown() {
+      this.showPriorityDropdown = !this.showPriorityDropdown;
+    },
+    closePriorityDropdown() {
+      this.showPriorityDropdown = false;
+    },
+    changePriority(priority) {
+      this.$emit('change-priority', priority);
+      this.showPriorityDropdown = false;
     }
   }
 }
@@ -148,5 +201,62 @@ export default {
 
 .add-subtask-btn:hover {
   color: #3aa876;
+}
+
+.todo-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority-icon {
+  font-size: 16px;
+  min-width: 20px;
+}
+
+.priority-dropdown {
+  position: relative;
+}
+
+.priority-btn {
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+  color: #42b983;
+}
+
+.priority-btn:hover {
+  color: #3aa876;
+}
+
+.priority-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.priority-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority-item:hover {
+  background-color: #f5f5f5;
+}
+
+.priority-item.active {
+  background-color: #e8f5e9;
+  color: #42b983;
 }
 </style>

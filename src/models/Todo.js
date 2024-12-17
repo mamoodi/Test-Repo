@@ -5,6 +5,7 @@ export class Todo {
     this.completed = false;
     this.isSubtask = isSubtask;
     this.subtasks = isSubtask ? null : [];
+    this.priority = isSubtask ? null : 'Medium';  // Default priority for main tasks
   }
 
   addSubtask(text) {
@@ -38,6 +39,7 @@ export class Todo {
       text: this.text,
       completed: this.completed,
       isSubtask: this.isSubtask,
+      priority: this.priority,
       subtasks: this.subtasks?.map(subtask => subtask.toJSON()) || null
     };
   }
@@ -46,9 +48,20 @@ export class Todo {
     const todo = new Todo(json.text, json.isSubtask);
     todo.id = json.id;
     todo.completed = json.completed;
+    todo.priority = json.priority;
     if (json.subtasks) {
       todo.subtasks = json.subtasks.map(subtaskJson => Todo.fromJSON(subtaskJson));
     }
     return todo;
+  }
+
+  setPriority(priority) {
+    if (this.isSubtask) {
+      throw new Error('Subtasks cannot have priority');
+    }
+    if (!['Critical', 'High', 'Medium', 'Low'].includes(priority)) {
+      throw new Error('Invalid priority level');
+    }
+    this.priority = priority;
   }
 }

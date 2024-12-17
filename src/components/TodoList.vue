@@ -21,6 +21,7 @@
         @delete-subtask="(subtaskId) => showDeleteSubtaskConfirmation(todo.id, subtaskId)"
         @edit-subtask="(subtaskId, text) => handleEditSubtask(todo.id, subtaskId, text)"
         @toggle-subtask-complete="(subtaskId) => handleToggleSubtaskComplete(todo.id, subtaskId)"
+        @change-priority="(priority) => handleChangePriority(todo.id, priority)"
       />
     </ul>
     
@@ -77,6 +78,7 @@ export default {
       'deleteSubtask',
       'editSubtask',
       'toggleSubtaskComplete',
+      'changePriority',
       'clearTodos',
       'loadTodos',
       'saveTodos'
@@ -163,14 +165,18 @@ export default {
       this.toggleSubtaskComplete({ parentId, subtaskId });
       this.saveTodos();
     },
+    handleChangePriority(todoId, priority) {
+      this.changePriority({ todoId, priority });
+      this.saveTodos();
+    },
     exportToCsv() {
-      const headers = 'Task,Status\n';
+      const headers = 'Task,Status,Priority\n';
       const rows = this.todos.map(todo => {
         const status = todo.completed ? 'Completed' : 'Pending';
         const escapedText = todo.text.includes('"') ? 
           `"${todo.text.replace(/"/g, '""')}"` : 
           todo.text.includes(',') ? `"${todo.text}"` : todo.text;
-        let row = `${escapedText},${status}`;
+        let row = `${escapedText},${status},${todo.priority}`;
 
         if (todo.subtasks && todo.subtasks.length > 0) {
           todo.subtasks.forEach(subtask => {
@@ -178,7 +184,7 @@ export default {
             const escapedSubText = subtask.text.includes('"') ? 
               `"${subtask.text.replace(/"/g, '""')}"` : 
               subtask.text.includes(',') ? `"${subtask.text}"` : subtask.text;
-            row += `\n  - ${escapedSubText},${subStatus}`;
+            row += `\n  - ${escapedSubText},${subStatus},-`;
           });
         }
         return row;
