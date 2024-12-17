@@ -28,7 +28,8 @@
               @click="changePriority(priority)"
               :class="{ active: todo.priority === priority }"
             >
-              {{ getPriorityIcon(priority) }} {{ priority }}
+              <span class="priority-icon">{{ getPriorityIcon(priority) }}</span>
+              <span>{{ priority }}</span>
             </div>
           </div>
         </div>
@@ -105,10 +106,10 @@ export default {
     getPriorityIcon(priority) {
       switch (priority) {
         case 'Critical': return '❗';
-        case 'High': return '⚡';
-        case 'Medium': return '⚑';
+        case 'High': return '↑';
+        case 'Medium': return '−';
         case 'Low': return '↓';
-        default: return '⚑';
+        default: return '−';
       }
     },
     togglePriorityDropdown() {
@@ -211,9 +212,10 @@ export default {
 
 .priority-icon {
   font-size: 14px;
-  min-width: 16px;
+  width: 16px;
   display: inline-block;
   text-align: center;
+  line-height: 1;
 }
 
 .priority-dropdown {
@@ -248,9 +250,9 @@ export default {
 .priority-item {
   padding: 8px 12px;
   cursor: pointer;
-  display: flex;
+  display: grid;
+  grid-template-columns: 24px 1fr;
   align-items: center;
-  gap: 8px;
   font-size: 0.9em;
   min-width: 110px;
 }
