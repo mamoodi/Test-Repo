@@ -62,6 +62,12 @@ export default createStore({
     },
     SET_TODOS(state, todos) {
       state.todos = todos;
+    },
+    CHANGE_PRIORITY(state, { todoId, priority }) {
+      const todo = state.todos.find(todo => todo.id === todoId);
+      if (todo) {
+        todo.setPriority(priority);
+      }
     }
   },
   actions: {
@@ -123,6 +129,9 @@ export default createStore({
     },
     saveTodos({ state }) {
       localStorage.setItem('todos', JSON.stringify(state.todos));
+    },
+    changePriority({ commit }, { todoId, priority }) {
+      commit('CHANGE_PRIORITY', { todoId, priority });
     }
   }
 });
