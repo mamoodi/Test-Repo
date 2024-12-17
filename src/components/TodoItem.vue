@@ -210,8 +210,10 @@ export default {
 }
 
 .priority-icon {
-  font-size: 16px;
-  min-width: 20px;
+  font-size: 14px;
+  min-width: 16px;
+  display: inline-block;
+  text-align: center;
 }
 
 .priority-dropdown {
@@ -249,6 +251,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.9em;
+  min-width: 110px;
 }
 
 .priority-item:hover {
