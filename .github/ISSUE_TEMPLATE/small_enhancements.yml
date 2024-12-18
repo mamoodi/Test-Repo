@@ -1,0 +1,12 @@
+name: Small Enhancements
+description: Suggest a small enhancement for OpenHands. For feature requests, use Discussions.
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please provide a clear description of the enhancement.
+      placeholder: PLEASE NOTE - If this is feature request, use Discussions.
+    validations:
+      required: true
+      
