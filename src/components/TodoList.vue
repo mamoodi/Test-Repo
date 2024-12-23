@@ -7,7 +7,7 @@
         placeholder="Add a new todo"
         @keyup.enter="handleAddTodo"
       >
-      <button @click="handleAddTodo">Add</button>
+      <button @click="handleAddTodo" :disabled="!isValidInput" :class="{ disabled: !isValidInput }">Add</button>
     </div>
     <ul class="todos">
       <todo-item
@@ -66,7 +66,10 @@ export default {
     }
   },
   computed: {
-    ...mapState(['todos'])
+    ...mapState(['todos']),
+    isValidInput() {
+      return this.newTodo.trim().length > 0;
+    }
   },
   methods: {
     ...mapActions([
@@ -238,6 +241,15 @@ button {
 
 button:hover {
   background-color: #3aa876;
+}
+
+button.disabled {
+  background-color: #a8a8a8;
+  cursor: not-allowed;
+}
+
+button.disabled:hover {
+  background-color: #a8a8a8;
 }
 
 .todos {
