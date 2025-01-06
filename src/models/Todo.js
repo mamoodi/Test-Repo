@@ -6,6 +6,7 @@ export class Todo {
     this.isSubtask = isSubtask;
     this.subtasks = isSubtask ? null : [];
     this.priority = isSubtask ? null : 'Medium';  // Default priority for main tasks
+    this.categories = isSubtask ? null : [];  // Categories only for main tasks
   }
 
   addSubtask(text) {
@@ -40,6 +41,7 @@ export class Todo {
       completed: this.completed,
       isSubtask: this.isSubtask,
       priority: this.priority,
+      categories: this.categories,
       subtasks: this.subtasks?.map(subtask => subtask.toJSON()) || null
     };
   }
@@ -49,6 +51,7 @@ export class Todo {
     todo.id = json.id;
     todo.completed = json.completed;
     todo.priority = json.priority;
+    todo.categories = json.categories || [];
     if (json.subtasks) {
       todo.subtasks = json.subtasks.map(subtaskJson => Todo.fromJSON(subtaskJson));
     }
@@ -63,5 +66,26 @@ export class Todo {
       throw new Error('Invalid priority level');
     }
     this.priority = priority;
+  }
+
+  addCategory(categoryId) {
+    if (this.isSubtask) {
+      throw new Error('Subtasks cannot have categories');
+    }
+    if (!this.categories.includes(categoryId)) {
+      this.categories.push(categoryId);
+    }
+  }
+
+  removeCategory(categoryId) {
+    if (this.isSubtask) return;
+    const index = this.categories.indexOf(categoryId);
+    if (index !== -1) {
+      this.categories.splice(index, 1);
+    }
+  }
+
+  hasCategory(categoryId) {
+    return this.categories?.includes(categoryId) || false;
   }
 }

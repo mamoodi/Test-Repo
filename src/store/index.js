@@ -1,9 +1,11 @@
 import { createStore } from 'vuex';
 import { Todo } from '../models/Todo';
+import { Category } from '../models/Category';
 
 export default createStore({
   state: {
-    todos: []
+    todos: [],
+    categories: []
   },
   mutations: {
     ADD_TODO(state, todo) {
@@ -68,6 +70,40 @@ export default createStore({
       if (todo) {
         todo.setPriority(priority);
       }
+    },
+    ADD_CATEGORY(state, category) {
+      state.categories.push(category);
+    },
+    UPDATE_CATEGORY(state, { id, name, color, description }) {
+      const category = state.categories.find(cat => cat.id === id);
+      if (category) {
+        category.name = name;
+        category.color = color;
+        category.description = description;
+      }
+    },
+    DELETE_CATEGORY(state, categoryId) {
+      const index = state.categories.findIndex(cat => cat.id === categoryId);
+      if (index !== -1) {
+        state.categories.splice(index, 1);
+        // Remove this category from all todos
+        state.todos.forEach(todo => todo.removeCategory(categoryId));
+      }
+    },
+    ADD_TODO_CATEGORY(state, { todoId, categoryId }) {
+      const todo = state.todos.find(todo => todo.id === todoId);
+      if (todo) {
+        todo.addCategory(categoryId);
+      }
+    },
+    REMOVE_TODO_CATEGORY(state, { todoId, categoryId }) {
+      const todo = state.todos.find(todo => todo.id === todoId);
+      if (todo) {
+        todo.removeCategory(categoryId);
+      }
+    },
+    SET_CATEGORIES(state, categories) {
+      state.categories = categories;
     }
   },
   actions: {
@@ -132,6 +168,46 @@ export default createStore({
     },
     changePriority({ commit }, { todoId, priority }) {
       commit('CHANGE_PRIORITY', { todoId, priority });
+    },
+    addCategory({ commit, state }, { name, color, description = '' }) {
+      const normalizedName = name.toLowerCase().trim();
+      const isDuplicate = state.categories.some(cat => 
+        cat.name.toLowerCase().trim() === normalizedName
+      );
+
+      if (isDuplicate) {
+        throw new Error('Category already exists');
+      }
+
+      const category = new Category(Date.now().toString(), name, color, description);
+      commit('ADD_CATEGORY', category);
+      return category;
+    },
+    updateCategory({ commit }, { id, name, color, description }) {
+      commit('UPDATE_CATEGORY', { id, name, color, description });
+    },
+    deleteCategory({ commit }, categoryId) {
+      commit('DELETE_CATEGORY', categoryId);
+    },
+    addTodoCategory({ commit, state }, { todoId, categoryId }) {
+      const category = state.categories.find(cat => cat.id === categoryId);
+      if (!category) {
+        throw new Error('Category not found');
+      }
+      commit('ADD_TODO_CATEGORY', { todoId, categoryId });
+    },
+    removeTodoCategory({ commit }, { todoId, categoryId }) {
+      commit('REMOVE_TODO_CATEGORY', { todoId, categoryId });
+    },
+    loadCategories({ commit }) {
+      const savedCategories = localStorage.getItem('categories');
+      if (savedCategories) {
+        const categories = JSON.parse(savedCategories).map(cat => Category.fromJSON(cat));
+        commit('SET_CATEGORIES', categories);
+      }
+    },
+    saveCategories({ state }) {
+      localStorage.setItem('categories', JSON.stringify(state.categories));
     }
   }
 });

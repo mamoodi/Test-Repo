@@ -84,7 +84,8 @@ export default {
       'changePriority',
       'clearTodos',
       'loadTodos',
-      'saveTodos'
+      'saveTodos',
+      'saveCategories'
     ]),
     handleAddTodo() {
       if (this.newTodo.trim()) {
@@ -92,6 +93,7 @@ export default {
           this.addTodo(this.newTodo.trim());
           this.newTodo = '';
           this.saveTodos();
+          this.saveCategories();
         } catch (error) {
           if (error.message === 'Item already exists') {
             this.toast.error('Item already exists', {
@@ -107,6 +109,7 @@ export default {
         try {
           this.addSubtask({ parentId, text: text.trim() });
           this.saveTodos();
+          this.saveCategories();
         } catch (error) {
           if (error.message === 'Item already exists') {
             this.toast.error('Item already exists', {
@@ -150,36 +153,50 @@ export default {
         await this.deleteSubtask({ parentId: this.parentId, subtaskId: this.subtaskId });
       }
       this.saveTodos();
+      this.saveCategories();
       this.cancelAction();
     },
     handleEditTodo(todoId, text) {
       this.editTodo({ todoId, text });
       this.saveTodos();
+      this.saveCategories();
     },
     handleToggleTodoComplete(todoId) {
       this.toggleTodoComplete(todoId);
       this.saveTodos();
+      this.saveCategories();
     },
     handleEditSubtask(parentId, subtaskId, text) {
       this.editSubtask({ parentId, subtaskId, text });
       this.saveTodos();
+      this.saveCategories();
     },
     handleToggleSubtaskComplete(parentId, subtaskId) {
       this.toggleSubtaskComplete({ parentId, subtaskId });
       this.saveTodos();
+      this.saveCategories();
     },
     handleChangePriority(todoId, priority) {
       this.changePriority({ todoId, priority });
       this.saveTodos();
+      this.saveCategories();
     },
     exportToCsv() {
-      const headers = 'Task,Status,Priority\n';
+      const headers = 'Task,Status,Priority,Categories\n';
       const rows = this.todos.map(todo => {
         const status = todo.completed ? 'Completed' : 'Pending';
         const escapedText = todo.text.includes('"') ? 
           `"${todo.text.replace(/"/g, '""')}"` : 
           todo.text.includes(',') ? `"${todo.text}"` : todo.text;
-        let row = `${escapedText},${status},${todo.priority}`;
+        
+        const categories = todo.categories
+          .map(catId => this.$store.state.categories.find(c => c.id === catId)?.name || '')
+          .filter(name => name)
+          .join('; ');
+        const escapedCategories = categories.includes('"') || categories.includes(',') ? 
+          `"${categories.replace(/"/g, '""')}"` : categories;
+
+        let row = `${escapedText},${status},${todo.priority},${escapedCategories}`;
 
         if (todo.subtasks && todo.subtasks.length > 0) {
           todo.subtasks.forEach(subtask => {
@@ -187,7 +204,7 @@ export default {
             const escapedSubText = subtask.text.includes('"') ? 
               `"${subtask.text.replace(/"/g, '""')}"` : 
               subtask.text.includes(',') ? `"${subtask.text}"` : subtask.text;
-            row += `\n  - ${escapedSubText},${subStatus},-`;
+            row += `\n  - ${escapedSubText},${subStatus},-,-`;
           });
         }
         return row;

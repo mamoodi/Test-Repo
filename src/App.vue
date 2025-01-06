@@ -1,17 +1,23 @@
 <template>
   <div id="app">
     <h1>TODO APP</h1>
+    <CategoryManager />
     <TodoList />
   </div>
 </template>
 
 <script>
 import TodoList from './components/TodoList.vue'
+import CategoryManager from './components/CategoryManager.vue'
 
 export default {
   name: 'App',
   components: {
-    TodoList
+    TodoList,
+    CategoryManager
+  },
+  created() {
+    this.$store.dispatch('loadCategories')
   }
 }
 </script>
