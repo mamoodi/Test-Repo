@@ -1,17 +1,27 @@
 <template>
   <div id="app">
-    <h1>My Todo List</h1>
-    <TodoList />
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import TodoList from './components/TodoList.vue'
+import { useStore } from 'vuex';
+import { onMounted } from 'vue';
 
 export default {
   name: 'App',
-  components: {
-    TodoList
+  setup() {
+    const store = useStore();
+
+    onMounted(() => {
+      // Initialize the store from localStorage
+      const savedLists = localStorage.getItem('todoLists');
+      if (savedLists) {
+        store.commit('setTodoLists', JSON.parse(savedLists));
+      }
+    });
+
+    return {};
   }
 }
 </script>
