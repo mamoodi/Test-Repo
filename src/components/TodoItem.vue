@@ -170,14 +170,15 @@ export default {
   font-size: 20px;
   cursor: pointer;
   padding: 0 8px;
+  transition: color 0.2s;
 }
 
 .edit-btn {
-  color: #42b983;
+  color: #888;
 }
 
 .edit-btn:hover {
-  color: #3aa876;
+  color: #666;
 }
 
 .complete-btn {
@@ -188,20 +189,26 @@ export default {
   color: #42b983;
 }
 
-.delete-btn {
-  color: #ff4444;
+.todo-container .todo-item .delete-btn,
+.todo-container .subtask-item .delete-btn {
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
 }
 
-.delete-btn:hover {
-  color: #cc0000;
+.todo-container .todo-item .delete-btn:hover,
+.todo-container .subtask-item .delete-btn:hover {
+  color: #ffffff !important;
+  background-color: #ff0000 !important;
 }
 
-.add-subtask-btn {
-  color: #42b983;
+.todo-container .todo-item .add-subtask-btn {
+  color: #00aa00 !important;
+  border-color: #00aa00 !important;
 }
 
-.add-subtask-btn:hover {
-  color: #3aa876;
+.todo-container .todo-item .add-subtask-btn:hover {
+  color: #ffffff !important;
+  background-color: #00aa00 !important;
 }
 
 .todo-text {
