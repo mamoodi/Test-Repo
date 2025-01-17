@@ -24,7 +24,10 @@
           class="list-card"
           @click="openList(list.id)"
         >
-          <h3>{{ list.name }}</h3>
+          <div class="list-header">
+            <h3>{{ list.name }}</h3>
+            <button class="delete-btn" @click.stop="confirmDeleteList(list)">×</button>
+          </div>
           <p>{{ list.todos.length }} items</p>
           <p class="last-modified">Last modified: {{ formatDate(list.lastModified) }}</p>
         </div>
@@ -80,12 +83,19 @@ export default {
       return new Date(date).toLocaleString();
     };
 
+    const confirmDeleteList = (list) => {
+      if (confirm(`Are you sure you want to delete the list "${list.name}"?`)) {
+        store.commit('deleteTodoList', list.id);
+      }
+    };
+
     return {
       newListName,
       todoLists,
       createList,
       openList,
-      formatDate
+      formatDate,
+      confirmDeleteList
     };
   }
 };
@@ -159,9 +169,30 @@ button:disabled {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .list-card h3 {
-  margin: 0 0 10px 0;
+  margin: 0;
   color: #2c3e50;
+}
+
+.delete-btn {
+  background-color: transparent;
+  color: #ff4444;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 8px;
+  line-height: 1;
+}
+
+.delete-btn:hover {
+  color: #cc0000;
 }
 
 .list-card p {

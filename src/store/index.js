@@ -57,6 +57,13 @@ export default createStore({
     },
     setTodoLists(state, lists) {
       state.todoLists = lists;
+    },
+    deleteTodoList(state, listId) {
+      const index = state.todoLists.findIndex(list => list.id === listId);
+      if (index > -1) {
+        state.todoLists.splice(index, 1);
+        localStorage.setItem('todoLists', JSON.stringify(state.todoLists));
+      }
     }
   },
   actions: {
