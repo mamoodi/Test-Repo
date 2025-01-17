@@ -173,11 +173,11 @@ export default {
 }
 
 .edit-btn {
-  color: #42b983;
+  color: #888;
 }
 
 .edit-btn:hover {
-  color: #3aa876;
+  color: #666;
 }
 
 .complete-btn {
