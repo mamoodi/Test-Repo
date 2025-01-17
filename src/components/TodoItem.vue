@@ -170,6 +170,7 @@ export default {
   font-size: 20px;
   cursor: pointer;
   padding: 0 8px;
+  transition: color 0.2s;
 }
 
 .edit-btn {
@@ -189,19 +190,19 @@ export default {
 }
 
 .delete-btn {
-  color: #ff4444;
+  color: #ff0000 !important;
 }
 
 .delete-btn:hover {
-  color: #cc0000;
+  color: #cc0000 !important;
 }
 
 .add-subtask-btn {
-  color: #42b983;
+  color: #00aa00 !important;
 }
 
 .add-subtask-btn:hover {
-  color: #3aa876;
+  color: #008800 !important;
 }
 
 .todo-text {
