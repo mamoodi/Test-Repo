@@ -189,20 +189,26 @@ export default {
   color: #42b983;
 }
 
-.delete-btn {
+.todo-container .todo-item .delete-btn,
+.todo-container .subtask-item .delete-btn {
   color: #ff0000 !important;
+  border-color: #ff0000 !important;
 }
 
-.delete-btn:hover {
-  color: #cc0000 !important;
+.todo-container .todo-item .delete-btn:hover,
+.todo-container .subtask-item .delete-btn:hover {
+  color: #ffffff !important;
+  background-color: #ff0000 !important;
 }
 
-.add-subtask-btn {
+.todo-container .todo-item .add-subtask-btn {
   color: #00aa00 !important;
+  border-color: #00aa00 !important;
 }
 
-.add-subtask-btn:hover {
-  color: #008800 !important;
+.todo-container .todo-item .add-subtask-btn:hover {
+  color: #ffffff !important;
+  background-color: #00aa00 !important;
 }
 
 .todo-text {
