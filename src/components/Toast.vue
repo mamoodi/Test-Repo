@@ -1,16 +1,19 @@
 <template>
-  <transition name="toast">
-    <div v-if="isVisible" class="toast" :class="type">
+  <Transition name="fade">
+    <div v-show="message" class="toast" :class="type">
       {{ message }}
     </div>
-  </transition>
+  </Transition>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { Transition } from 'vue';
 
 export default {
   name: 'Toast',
+  components: {
+    Transition
+  },
   props: {
     message: {
       type: String,
@@ -19,27 +22,7 @@ export default {
     type: {
       type: String,
       default: 'info'
-    },
-    duration: {
-      type: Number,
-      default: 3000
     }
-  },
-  setup(props, { emit }) {
-    const isVisible = ref(false);
-
-    const show = () => {
-      isVisible.value = true;
-      setTimeout(() => {
-        isVisible.value = false;
-        setTimeout(() => emit('hidden'), 300); // After fade out animation
-      }, props.duration);
-    };
-
-    return {
-      isVisible,
-      show
-    };
   }
 };
 </script>

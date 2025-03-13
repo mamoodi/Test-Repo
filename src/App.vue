@@ -2,10 +2,8 @@
   <div id="app">
     <router-view></router-view>
     <Toast 
-      v-if="toast.show"
-      :message="toast.message"
+      :message="toast.show ? toast.message : ''"
       :type="toast.type"
-      @hidden="hideToast"
     />
   </div>
 </template>

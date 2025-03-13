@@ -97,6 +97,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'TodoList',
@@ -104,6 +105,7 @@ export default {
     const store = useStore();
     const route = useRoute();
     const router = useRouter();
+    const toast = useToast();
 
     const goBack = () => {
       router.push('/');

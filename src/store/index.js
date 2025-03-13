@@ -1,5 +1,6 @@
 import { createStore } from 'vuex';
 import { Todo } from '../models/Todo';
+import { useToast } from 'vue-toastification';
 
 export default createStore({
   state: {
@@ -85,11 +86,9 @@ export default createStore({
     initializeApp({ commit }) {
       commit('initializeStore');
     },
-    showToast({ commit }, message) {
-      commit('setToast', { message, show: true });
-      setTimeout(() => {
-        commit('setToast', { message: '', show: false });
-      }, 3000);
+    showToast(_, message) {
+      const toast = useToast();
+      toast.error(message);
     }
   }
 });
