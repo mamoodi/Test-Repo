@@ -110,15 +110,25 @@ export default {
 
 h1 {
   text-align: center;
-  color: #2c3e50;
+  color: #1a73e8;
   margin-bottom: 40px;
+  font-size: 2.5em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .create-list {
   margin-bottom: 40px;
   padding: 20px;
-  background-color: #f8f9fa;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8eaed;
+}
+
+.create-list h2 {
+  color: #202124;
+  margin-bottom: 15px;
+  font-size: 1.5em;
 }
 
 .input-group {
@@ -136,15 +146,21 @@ input {
 
 button {
   padding: 10px 20px;
-  background-color: #4CAF50;
+  background-color: #1a73e8;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #1557b0;
 }
 
 button:disabled {
-  background-color: #cccccc;
+  background-color: #dadce0;
   cursor: not-allowed;
 }
 
@@ -157,11 +173,12 @@ button:disabled {
 
 .list-card {
   padding: 20px;
-  background-color: #fff;
-  border: 1px solid #ddd;
+  background: white;
+  border: 1px solid #e8eaed;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .list-card:hover {
@@ -178,36 +195,45 @@ button:disabled {
 
 .list-card h3 {
   margin: 0;
-  color: #2c3e50;
+  color: #202124;
+  font-size: 1.2em;
 }
 
 .delete-btn {
   background-color: transparent;
-  color: #ff4444;
+  color: #d93025;
   border: none;
   font-size: 24px;
   cursor: pointer;
   padding: 0 8px;
   line-height: 1;
+  transition: color 0.2s ease;
 }
 
 .delete-btn:hover {
-  color: #cc0000;
+  color: #a50e0e;
+  background-color: transparent;
 }
 
 .list-card p {
   margin: 5px 0;
-  color: #666;
+  color: #5f6368;
 }
 
 .last-modified {
   font-size: 0.9em;
-  color: #888;
+  color: #80868b;
+  font-style: italic;
 }
 
 .no-lists {
   text-align: center;
-  color: #666;
+  color: #5f6368;
   margin-top: 40px;
+  font-size: 1.1em;
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 8px;
+  border: 1px dashed #dadce0;
 }
 </style>
