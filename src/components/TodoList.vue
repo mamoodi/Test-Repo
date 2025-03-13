@@ -244,7 +244,8 @@ export default {
             id: Date.now(),
             text: subtaskText.trim(),
             completed: false,
-            editing: false
+            editing: false,
+            deadline: null
           }
         });
       }

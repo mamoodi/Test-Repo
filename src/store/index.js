@@ -52,6 +52,12 @@ export default createStore({
     updateSubtask(state, { subtask, newText }) {
       subtask.text = newText;
     },
+    updateTodoDeadline(state, { todo, deadline }) {
+      todo.deadline = deadline;
+    },
+    updateSubtaskDeadline(state, { subtask, deadline }) {
+      subtask.deadline = deadline;
+    },
     clearTodos(state) {
       state.currentTodos = [];
     },
