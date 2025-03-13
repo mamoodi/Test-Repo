@@ -171,7 +171,7 @@ export default {
       if (newDeadline) {
         const date = new Date(newDeadline);
         if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Invalid date format. Please use YYYY-MM-DD');
+          store.dispatch('showToast', 'Please enter date in correct format');
           return;
         }
         store.commit('updateTodoDeadline', { todo, deadline: newDeadline });
@@ -186,7 +186,7 @@ export default {
       if (newDeadline) {
         const date = new Date(newDeadline);
         if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Invalid date format. Please use YYYY-MM-DD');
+          store.dispatch('showToast', 'Please enter date in correct format');
           return;
         }
         store.commit('updateSubtaskDeadline', { todo, subtask, deadline: newDeadline });
