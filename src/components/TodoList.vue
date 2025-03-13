@@ -294,22 +294,25 @@ export default {
 }
 
 .header {
+  position: relative;
   display: flex;
   align-items: center;
   margin-bottom: 30px;
-  gap: 20px;
+  justify-content: center;
 }
 
 .header h1 {
   margin: 0;
-  flex: 1;
   color: #1a73e8;  /* Google Blue */
   font-size: 2.2em;
   font-weight: 500;
   letter-spacing: -0.5px;
+  text-align: center;
 }
 
 .back-btn {
+  position: absolute;
+  left: 0;
   background-color: #1a73e8 !important;  /* Google Blue */
   padding: 8px 16px;
   font-size: 14px;
