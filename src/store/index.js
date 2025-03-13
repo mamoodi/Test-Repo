@@ -1,10 +1,16 @@
 import { createStore } from 'vuex';
 import { Todo } from '../models/Todo';
+import { useToast } from 'vue-toastification';
 
 export default createStore({
   state: {
     todoLists: [],
     currentTodos: [],
+    toast: {
+      message: '',
+      type: 'info',
+      show: false
+    }
   },
   mutations: {
     createTodoList(state, list) {
@@ -52,6 +58,12 @@ export default createStore({
     updateSubtask(state, { subtask, newText }) {
       subtask.text = newText;
     },
+    updateTodoDeadline(state, { todo, deadline }) {
+      todo.deadline = deadline;
+    },
+    updateSubtaskDeadline(state, { subtask, deadline }) {
+      subtask.deadline = deadline;
+    },
     clearTodos(state) {
       state.currentTodos = [];
     },
@@ -64,6 +76,10 @@ export default createStore({
         state.todoLists.splice(index, 1);
         localStorage.setItem('todoLists', JSON.stringify(state.todoLists));
       }
+    },
+    setToast(state, { message, show }) {
+      state.toast.message = message;
+      state.toast.show = show;
     }
   },
   actions: {
@@ -71,7 +87,8 @@ export default createStore({
       commit('initializeStore');
     },
     showToast(_, message) {
-      console.log('Toast:', message);
+      const toast = useToast();
+      toast.error(message);
     }
   }
 });

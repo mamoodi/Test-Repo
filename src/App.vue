@@ -1,15 +1,23 @@
 <template>
   <div id="app">
     <router-view></router-view>
+    <Toast 
+      :message="toast.show ? toast.message : ''"
+      :type="toast.type"
+    />
   </div>
 </template>
 
 <script>
 import { useStore } from 'vuex';
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
+import Toast from './components/Toast.vue';
 
 export default {
   name: 'App',
+  components: {
+    Toast
+  },
   setup() {
     const store = useStore();
 
@@ -21,7 +29,13 @@ export default {
       }
     });
 
-    return {};
+    const toast = computed(() => store.state.toast);
+    const hideToast = () => store.commit('setToast', { message: '', show: false });
+
+    return {
+      toast,
+      hideToast
+    };
   }
 }
 </script>

@@ -18,19 +18,31 @@
         <li v-for="todo in todos" :key="todo.id" :class="{ completed: todo.completed }">
           <div class="todo-item">
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
-            <span v-if="!todo.editing" @dblclick="startEditing(todo)">{{ todo.text }}</span>
-            <input
-              v-else
-              type="text"
-              v-model="todo.editText"
-              @blur="finishEditing(todo)"
-              @keyup.enter="finishEditing(todo)"
-              @keyup.esc="cancelEditing(todo)"
-            />
-            <div class="todo-actions">
-              <button class="icon-button" @click="startEditing(todo)">✎</button>
-              <button class="icon-button" @click="addSubtask(todo)">+</button>
-              <button class="icon-button" @click="deleteTodo(todo)">×</button>
+            <div class="todo-content">
+              <div class="todo-main">
+                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">{{ todo.text }}</span>
+                <input
+                  v-else
+                  type="text"
+                  v-model="todo.editText"
+                  @blur="finishEditing(todo)"
+                  @keyup.enter="finishEditing(todo)"
+                  @keyup.esc="cancelEditing(todo)"
+                  class="todo-input"
+                />
+                <div class="todo-actions">
+                  <button class="icon-button" @click="startEditing(todo)">✎</button>
+                  <button class="icon-button" @click="addSubtask(todo)">+</button>
+                  <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
+                  <button class="icon-button" @click="deleteTodo(todo)">×</button>
+                </div>
+              </div>
+              <div class="todo-details" v-if="todo.deadline">
+                <div :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
+                  <span class="deadline-icon">⏰</span>
+                  <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <ul class="subtask-list" v-if="todo.subtasks && todo.subtasks.length">
@@ -41,20 +53,32 @@
             >
               <div class="subtask-item">
                 <button class="icon-button" @click="toggleSubtask(todo, subtask)">✓</button>
-                <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)">
-                  {{ subtask.text }}
-                </span>
-                <input
-                  v-else
-                  type="text"
-                  v-model="subtask.editText"
-                  @blur="finishEditingSubtask(todo, subtask)"
-                  @keyup.enter="finishEditingSubtask(todo, subtask)"
-                  @keyup.esc="cancelEditingSubtask(subtask)"
-                />
-                <div class="subtask-actions">
-                  <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
-                  <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
+                <div class="subtask-content">
+                  <div class="subtask-main">
+                    <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
+                      {{ subtask.text }}
+                    </span>
+                    <input
+                      v-else
+                      type="text"
+                      v-model="subtask.editText"
+                      @blur="finishEditingSubtask(todo, subtask)"
+                      @keyup.enter="finishEditingSubtask(todo, subtask)"
+                      @keyup.esc="cancelEditingSubtask(subtask)"
+                      class="subtask-input"
+                    />
+                    <div class="subtask-actions">
+                      <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
+                      <button class="icon-button deadline-btn" @click="setSubtaskDeadline(todo, subtask)">📅</button>
+                      <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
+                    </div>
+                  </div>
+                  <div class="subtask-details" v-if="subtask.deadline">
+                    <div :class="['deadline-info', { 'overdue': isOverdue(subtask.deadline) }]">
+                      <span class="deadline-icon">⏰</span>
+                      <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </li>
@@ -73,6 +97,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'TodoList',
@@ -80,6 +105,7 @@ export default {
     const store = useStore();
     const route = useRoute();
     const router = useRouter();
+    const toast = useToast();
 
     const goBack = () => {
       router.push('/');
@@ -119,9 +145,53 @@ export default {
           text: todoText,
           completed: false,
           subtasks: [],
-          editing: false
+          editing: false,
+          deadline: null
         });
         newTodo.value = '';
+      }
+    };
+
+    const formatDeadline = (deadline) => {
+      const date = new Date(deadline);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    };
+
+    const isOverdue = (deadline) => {
+      return new Date(deadline) < new Date();
+    };
+
+    const setDeadline = (todo) => {
+      const currentDate = todo.deadline ? new Date(todo.deadline) : new Date();
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
+      
+      if (newDeadline) {
+        const date = new Date(newDeadline);
+        if (isNaN(date.getTime())) {
+          store.dispatch('showToast', 'Please enter date in correct format');
+          return;
+        }
+        store.commit('updateTodoDeadline', { todo, deadline: newDeadline });
+      }
+    };
+
+    const setSubtaskDeadline = (todo, subtask) => {
+      const currentDate = subtask.deadline ? new Date(subtask.deadline) : new Date();
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
+      
+      if (newDeadline) {
+        const date = new Date(newDeadline);
+        if (isNaN(date.getTime())) {
+          store.dispatch('showToast', 'Please enter date in correct format');
+          return;
+        }
+        store.commit('updateSubtaskDeadline', { todo, subtask, deadline: newDeadline });
       }
     };
 
@@ -176,7 +246,8 @@ export default {
             id: Date.now(),
             text: subtaskText.trim(),
             completed: false,
-            editing: false
+            editing: false,
+            deadline: null
           }
         });
       }
@@ -280,7 +351,11 @@ export default {
       cancelEditingSubtask,
       clearList,
       exportToCSV,
-      goBack
+      goBack,
+      setDeadline,
+      setSubtaskDeadline,
+      formatDeadline,
+      isOverdue
     };
   }
 };
@@ -294,22 +369,25 @@ export default {
 }
 
 .header {
+  position: relative;
   display: flex;
   align-items: center;
   margin-bottom: 30px;
-  gap: 20px;
+  justify-content: center;
 }
 
 .header h1 {
   margin: 0;
-  flex: 1;
   color: #1a73e8;  /* Google Blue */
   font-size: 2.2em;
   font-weight: 500;
   letter-spacing: -0.5px;
+  text-align: center;
 }
 
 .back-btn {
+  position: absolute;
+  left: 0;
   background-color: #1a73e8 !important;  /* Google Blue */
   padding: 8px 16px;
   font-size: 14px;
@@ -405,14 +483,71 @@ export default {
   border-radius: 4px;
 }
 
-.todo-item span, .subtask-item span {
+.todo-content, .subtask-content {
   flex: 1;
   margin: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.todo-main, .subtask-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.todo-text, .subtask-text {
+  flex: 1;
+  font-size: 1em;
+}
+
+.todo-input, .subtask-input {
+  flex: 1;
+  font-size: 1em;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.todo-details, .subtask-details {
+  margin-left: 4px;
+  font-size: 0.85em;
+}
+
+.deadline-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: #e8f0fe;
+  color: #1a73e8;
+}
+
+.deadline-info.overdue {
+  background-color: #fde8e8;
+  color: #dc3545;
+}
+
+.deadline-icon {
+  font-size: 0.9em;
+}
+
+.deadline-date {
+  white-space: nowrap;
 }
 
 .todo-actions, .subtask-actions {
   display: flex;
   gap: 5px;
+  margin-left: auto;
+}
+
+.deadline-btn {
+  font-size: 1em;
+  padding: 4px 8px;
 }
 
 
