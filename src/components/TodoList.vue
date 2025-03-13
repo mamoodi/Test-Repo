@@ -19,8 +19,8 @@
           <div class="todo-item">
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
-              <div class="todo-text">
-                <span v-if="!todo.editing" @dblclick="startEditing(todo)">{{ todo.text }}</span>
+              <div class="todo-main">
+                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">{{ todo.text }}</span>
                 <input
                   v-else
                   type="text"
@@ -28,17 +28,21 @@
                   @blur="finishEditing(todo)"
                   @keyup.enter="finishEditing(todo)"
                   @keyup.esc="cancelEditing(todo)"
+                  class="todo-input"
                 />
-                <div v-if="todo.deadline" :class="['deadline-tag', { 'overdue': isOverdue(todo.deadline) }]">
-                  {{ formatDeadline(todo.deadline) }}
+                <div class="todo-actions">
+                  <button class="icon-button" @click="startEditing(todo)">✎</button>
+                  <button class="icon-button" @click="addSubtask(todo)">+</button>
+                  <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
+                  <button class="icon-button" @click="deleteTodo(todo)">×</button>
                 </div>
               </div>
-            </div>
-            <div class="todo-actions">
-              <button class="icon-button" @click="startEditing(todo)">✎</button>
-              <button class="icon-button" @click="addSubtask(todo)">+</button>
-              <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
-              <button class="icon-button" @click="deleteTodo(todo)">×</button>
+              <div class="todo-details" v-if="todo.deadline">
+                <div :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
+                  <span class="deadline-icon">⏰</span>
+                  <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <ul class="subtask-list" v-if="todo.subtasks && todo.subtasks.length">
@@ -50,8 +54,8 @@
               <div class="subtask-item">
                 <button class="icon-button" @click="toggleSubtask(todo, subtask)">✓</button>
                 <div class="subtask-content">
-                  <div class="subtask-text">
-                    <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)">
+                  <div class="subtask-main">
+                    <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
                       {{ subtask.text }}
                     </span>
                     <input
@@ -61,16 +65,20 @@
                       @blur="finishEditingSubtask(todo, subtask)"
                       @keyup.enter="finishEditingSubtask(todo, subtask)"
                       @keyup.esc="cancelEditingSubtask(subtask)"
+                      class="subtask-input"
                     />
-                    <div v-if="subtask.deadline" :class="['deadline-tag', { 'overdue': isOverdue(subtask.deadline) }]">
-                      {{ formatDeadline(subtask.deadline) }}
+                    <div class="subtask-actions">
+                      <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
+                      <button class="icon-button deadline-btn" @click="setSubtaskDeadline(todo, subtask)">📅</button>
+                      <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
                     </div>
                   </div>
-                </div>
-                <div class="subtask-actions">
-                  <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
-                  <button class="icon-button deadline-btn" @click="setSubtaskDeadline(todo, subtask)">📅</button>
-                  <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
+                  <div class="subtask-details" v-if="subtask.deadline">
+                    <div :class="['deadline-info', { 'overdue': isOverdue(subtask.deadline) }]">
+                      <span class="deadline-icon">⏰</span>
+                      <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </li>
@@ -477,35 +485,61 @@ export default {
   margin: 0 10px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
-.todo-text, .subtask-text {
+.todo-main, .subtask-main {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.todo-text span, .subtask-text span {
+.todo-text, .subtask-text {
   flex: 1;
+  font-size: 1em;
 }
 
-.deadline-tag {
+.todo-input, .subtask-input {
+  flex: 1;
+  font-size: 1em;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.todo-details, .subtask-details {
+  margin-left: 4px;
   font-size: 0.85em;
+}
+
+.deadline-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 2px 8px;
   border-radius: 12px;
   background-color: #e8f0fe;
   color: #1a73e8;
-  white-space: nowrap;
 }
 
-.deadline-tag.overdue {
+.deadline-info.overdue {
   background-color: #fde8e8;
   color: #dc3545;
+}
+
+.deadline-icon {
+  font-size: 0.9em;
+}
+
+.deadline-date {
+  white-space: nowrap;
 }
 
 .todo-actions, .subtask-actions {
   display: flex;
   gap: 5px;
+  margin-left: auto;
 }
 
 .deadline-btn {
