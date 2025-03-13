@@ -5,6 +5,11 @@ export default createStore({
   state: {
     todoLists: [],
     currentTodos: [],
+    toast: {
+      message: '',
+      type: 'info',
+      show: false
+    }
   },
   mutations: {
     createTodoList(state, list) {
@@ -70,14 +75,21 @@ export default createStore({
         state.todoLists.splice(index, 1);
         localStorage.setItem('todoLists', JSON.stringify(state.todoLists));
       }
+    },
+    setToast(state, { message, show }) {
+      state.toast.message = message;
+      state.toast.show = show;
     }
   },
   actions: {
     initializeApp({ commit }) {
       commit('initializeStore');
     },
-    showToast(_, message) {
-      console.log('Toast:', message);
+    showToast({ commit }, message) {
+      commit('setToast', { message, show: true });
+      setTimeout(() => {
+        commit('setToast', { message: '', show: false });
+      }, 3000);
     }
   }
 });
