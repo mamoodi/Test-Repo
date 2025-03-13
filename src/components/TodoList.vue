@@ -303,16 +303,25 @@ export default {
 .header h1 {
   margin: 0;
   flex: 1;
+  color: #1a73e8;  /* Google Blue */
+  font-size: 2.2em;
+  font-weight: 500;
+  letter-spacing: -0.5px;
 }
 
 .back-btn {
-  background-color: #6c757d !important;
+  background-color: #1a73e8 !important;  /* Google Blue */
   padding: 8px 16px;
   font-size: 14px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .back-btn:hover {
-  background-color: #5a6268 !important;
+  background-color: #1557b0 !important;  /* Darker Google Blue */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .input-container {
