@@ -153,7 +153,10 @@ export default {
     };
 
     const formatDeadline = (deadline) => {
-      const date = new Date(deadline);
+      // Fix timezone issue by ensuring the date is interpreted in local time
+      // Add 'T12:00:00' to ensure it's noon in local time, avoiding any date shift
+      const localDateStr = deadline + 'T12:00:00';
+      const date = new Date(localDateStr);
       return date.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric',
@@ -162,35 +165,71 @@ export default {
     };
 
     const isOverdue = (deadline) => {
-      return new Date(deadline) < new Date();
+      // Use the same approach as formatDeadline for consistent date handling
+      const localDateStr = deadline + 'T12:00:00';
+      return new Date(localDateStr) < new Date();
     };
 
     const setDeadline = (todo) => {
-      const currentDate = todo.deadline ? new Date(todo.deadline) : new Date();
+      let currentDate;
+      if (todo.deadline) {
+        // Use the same approach for consistent date handling
+        const localDateStr = todo.deadline + 'T12:00:00';
+        currentDate = new Date(localDateStr);
+      } else {
+        currentDate = new Date();
+      }
       const dateStr = currentDate.toISOString().split('T')[0];
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        const date = new Date(newDeadline);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter date in correct format');
+        // Validate the date format
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(newDeadline)) {
+          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
           return;
         }
+        
+        // Create a date object to validate the date is real
+        const localDateStr = newDeadline + 'T12:00:00';
+        const date = new Date(localDateStr);
+        if (isNaN(date.getTime())) {
+          store.dispatch('showToast', 'Please enter a valid date');
+          return;
+        }
+        
         store.commit('updateTodoDeadline', { todo, deadline: newDeadline });
       }
     };
 
     const setSubtaskDeadline = (todo, subtask) => {
-      const currentDate = subtask.deadline ? new Date(subtask.deadline) : new Date();
+      let currentDate;
+      if (subtask.deadline) {
+        // Use the same approach for consistent date handling
+        const localDateStr = subtask.deadline + 'T12:00:00';
+        currentDate = new Date(localDateStr);
+      } else {
+        currentDate = new Date();
+      }
       const dateStr = currentDate.toISOString().split('T')[0];
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        const date = new Date(newDeadline);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter date in correct format');
+        // Validate the date format
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(newDeadline)) {
+          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
           return;
         }
+        
+        // Create a date object to validate the date is real
+        const localDateStr = newDeadline + 'T12:00:00';
+        const date = new Date(localDateStr);
+        if (isNaN(date.getTime())) {
+          store.dispatch('showToast', 'Please enter a valid date');
+          return;
+        }
+        
         store.commit('updateSubtaskDeadline', { todo, subtask, deadline: newDeadline });
       }
     };
