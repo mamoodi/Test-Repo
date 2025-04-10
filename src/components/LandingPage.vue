@@ -54,9 +54,19 @@ export default {
 
     const todoLists = computed(() => store.state.todoLists);
 
+    // Function to convert text to title case
+    const toTitleCase = (text) => {
+      return text
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+
     const createList = () => {
       if (newListName.value.trim()) {
-        const listName = newListName.value.trim();
+        // Convert the list name to title case
+        const listName = toTitleCase(newListName.value.trim());
         if (todoLists.value.some(list => list.name === listName)) {
           store.dispatch('showToast', 'A list with this name already exists!');
           return;
@@ -95,7 +105,8 @@ export default {
       createList,
       openList,
       formatDate,
-      confirmDeleteList
+      confirmDeleteList,
+      toTitleCase
     };
   }
 };
