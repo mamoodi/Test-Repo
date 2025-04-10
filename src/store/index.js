@@ -81,6 +81,13 @@ export default createStore({
       state.toast.message = message;
       state.toast.show = show;
     },
+    changePriority(state, { todoId, priority }) {
+      // Find the todo in the current list
+      const todo = state.currentTodos.find(todo => todo.id === todoId);
+      if (todo) {
+        todo.setPriority(priority);
+      }
+    },
     reorderTodos(state, { fromIndex, toIndex }) {
       if (fromIndex === toIndex) return;
       

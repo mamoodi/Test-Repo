@@ -32,17 +32,37 @@
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
               <div class="todo-main">
-                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">{{ todo.text }}</span>
-                <input
-                  v-else
-                  type="text"
-                  v-model="todo.editText"
-                  @blur="finishEditing(todo)"
-                  @keyup.enter="finishEditing(todo)"
-                  @keyup.esc="cancelEditing(todo)"
-                  class="todo-input"
-                />
+                <div class="todo-text-container">
+                  <div class="priority-icon" :title="todo.priority">
+                    {{ getPriorityIcon(todo.priority) }}
+                  </div>
+                  <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">{{ todo.text }}</span>
+                  <input
+                    v-else
+                    type="text"
+                    v-model="todo.editText"
+                    @blur="finishEditing(todo)"
+                    @keyup.enter="finishEditing(todo)"
+                    @keyup.esc="cancelEditing(todo)"
+                    class="todo-input"
+                  />
+                </div>
                 <div class="todo-actions">
+                  <div class="priority-dropdown" v-click-outside="closePriorityDropdown">
+                    <button class="icon-button priority-btn" @click="togglePriorityDropdown(todo)">⚑</button>
+                    <div v-if="todo.showPriorityDropdown" class="priority-menu">
+                      <div
+                        v-for="priority in priorities"
+                        :key="priority"
+                        class="priority-item"
+                        @click="changePriority(todo, priority)"
+                        :class="{ active: todo.priority === priority }"
+                      >
+                        <span class="priority-icon">{{ getPriorityIcon(priority) }}</span>
+                        <span>{{ priority }}</span>
+                      </div>
+                    </div>
+                  </div>
                   <button class="icon-button" @click="startEditing(todo)">✎</button>
                   <button class="icon-button" @click="addSubtask(todo)">+</button>
                   <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
@@ -126,6 +146,21 @@ import { useToast } from 'vue-toastification';
 
 export default {
   name: 'TodoList',
+  directives: {
+    clickOutside: {
+      mounted(el, binding) {
+        el._clickOutside = (event) => {
+          if (!(el === event.target || el.contains(event.target))) {
+            binding.value(event);
+          }
+        };
+        document.addEventListener('click', el._clickOutside);
+      },
+      unmounted(el) {
+        document.removeEventListener('click', el._clickOutside);
+      },
+    },
+  },
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -137,6 +172,9 @@ export default {
     const dragOverIndex = ref(null);
     const draggedSubtaskData = ref(null);
     const dragOverSubtaskData = ref(null);
+    
+    // Priority state
+    const priorities = ref(['Critical', 'High', 'Medium', 'Low']);
 
     const goBack = () => {
       router.push('/');
@@ -151,6 +189,11 @@ export default {
       if (list) {
         listName.value = list.name;
         store.commit('setCurrentTodos', list.todos || []);
+        
+        // Initialize showPriorityDropdown property for each todo
+        todos.value.forEach(todo => {
+          todo.showPriorityDropdown = false;
+        });
       }
     });
 
@@ -177,7 +220,9 @@ export default {
           completed: false,
           subtasks: [],
           editing: false,
-          deadline: null
+          deadline: null,
+          priority: 'Medium',
+          showPriorityDropdown: false
         });
         newTodo.value = '';
       }
@@ -370,22 +415,23 @@ export default {
 
     const exportToCSV = () => {
       const rows = [];
-      rows.push(['Task', 'Status', 'Subtask', 'Subtask Status']);
+      rows.push(['Task', 'Status', 'Priority', 'Subtask', 'Subtask Status']);
       
       todos.value.forEach(todo => {
         if (todo.subtasks.length === 0) {
-          rows.push([todo.text, todo.completed ? 'Completed' : 'Pending', '', '']);
+          rows.push([todo.text, todo.completed ? 'Completed' : 'Pending', todo.priority, '', '']);
         } else {
           todo.subtasks.forEach((subtask, index) => {
             if (index === 0) {
               rows.push([
                 todo.text,
                 todo.completed ? 'Completed' : 'Pending',
+                todo.priority,
                 subtask.text,
                 subtask.completed ? 'Completed' : 'Pending'
               ]);
             } else {
-              rows.push(['', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
+              rows.push(['', '', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
             }
           });
         }
@@ -483,6 +529,57 @@ export default {
       draggedSubtaskData.value = null;
     };
 
+    // Priority methods
+    const getPriorityIcon = (priority) => {
+      switch (priority) {
+        case 'Critical': return '❗';
+        case 'High': return '↑';
+        case 'Medium': return '−';
+        case 'Low': return '↓';
+        default: return '−';
+      }
+    };
+
+    const togglePriorityDropdown = (todo) => {
+      // Close any other open dropdowns first
+      todos.value.forEach(t => {
+        if (t !== todo && t.showPriorityDropdown) {
+          t.showPriorityDropdown = false;
+        }
+      });
+      
+      // Toggle the dropdown for this todo
+      todo.showPriorityDropdown = !todo.showPriorityDropdown;
+    };
+
+    const closePriorityDropdown = () => {
+      todos.value.forEach(todo => {
+        if (todo.showPriorityDropdown) {
+          todo.showPriorityDropdown = false;
+        }
+      });
+    };
+
+    const changePriority = (todo, priority) => {
+      store.commit('changePriority', { todoId: todo.id, priority });
+      todo.showPriorityDropdown = false;
+    };
+
+    // Add click-outside directive
+    const vClickOutside = {
+      mounted(el, binding) {
+        el._clickOutside = (event) => {
+          if (!(el === event.target || el.contains(event.target))) {
+            binding.value(event);
+          }
+        };
+        document.addEventListener('click', el._clickOutside);
+      },
+      unmounted(el) {
+        document.removeEventListener('click', el._clickOutside);
+      },
+    };
+
     return {
       newTodo,
       todos,
@@ -522,7 +619,13 @@ export default {
       dragEnterSubtask,
       dragLeaveSubtask,
       dropSubtask,
-      dragEndSubtask
+      dragEndSubtask,
+      // Priority state and methods
+      priorities,
+      getPriorityIcon,
+      togglePriorityDropdown,
+      closePriorityDropdown,
+      changePriority
     };
   }
 };
@@ -683,9 +786,24 @@ export default {
   gap: 10px;
 }
 
+.todo-text-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
 .todo-text, .subtask-text {
   flex: 1;
   font-size: 1em;
+}
+
+.priority-icon {
+  font-size: 14px;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+  line-height: 1;
 }
 
 .todo-input, .subtask-input {
@@ -722,6 +840,49 @@ export default {
 
 .deadline-date {
   white-space: nowrap;
+}
+
+.priority-dropdown {
+  position: relative;
+}
+
+.priority-btn {
+  color: #42b983;
+}
+
+.priority-btn:hover {
+  color: #3aa876;
+}
+
+.priority-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.priority-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  font-size: 0.9em;
+  min-width: 110px;
+}
+
+.priority-item:hover {
+  background-color: #f5f5f5;
+}
+
+.priority-item.active {
+  background-color: #e8f5e9;
+  color: #42b983;
 }
 
 .todo-actions, .subtask-actions {
