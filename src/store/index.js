@@ -80,6 +80,24 @@ export default createStore({
     setToast(state, { message, show }) {
       state.toast.message = message;
       state.toast.show = show;
+    },
+    reorderTodos(state, { fromIndex, toIndex }) {
+      if (fromIndex === toIndex) return;
+      
+      // Remove the item from its original position
+      const [movedItem] = state.currentTodos.splice(fromIndex, 1);
+      
+      // Insert the item at the new position
+      state.currentTodos.splice(toIndex, 0, movedItem);
+    },
+    reorderSubtasks(state, { todo, fromIndex, toIndex }) {
+      if (fromIndex === toIndex) return;
+      
+      // Remove the subtask from its original position
+      const [movedSubtask] = todo.subtasks.splice(fromIndex, 1);
+      
+      // Insert the subtask at the new position
+      todo.subtasks.splice(toIndex, 0, movedSubtask);
     }
   },
   actions: {

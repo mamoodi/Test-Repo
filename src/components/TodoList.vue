@@ -15,8 +15,20 @@
         <button :disabled="!newTodo.trim()" @click="addTodo">Add</button>
       </div>
       <ul class="todo-list">
-        <li v-for="todo in todos" :key="todo.id" :class="{ completed: todo.completed }">
+        <li 
+          v-for="(todo, index) in todos" 
+          :key="todo.id" 
+          :class="{ completed: todo.completed, 'drag-over': dragOverIndex === index }"
+          draggable="true"
+          @dragstart="dragStart($event, index)"
+          @dragover.prevent="dragOver($event, index)"
+          @dragenter.prevent="dragEnter(index)"
+          @dragleave="dragLeave()"
+          @drop="drop($event, index)"
+          @dragend="dragEnd()"
+        >
           <div class="todo-item">
+            <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
               <div class="todo-main">
@@ -47,11 +59,24 @@
           </div>
           <ul class="subtask-list" v-if="todo.subtasks && todo.subtasks.length">
             <li
-              v-for="subtask in todo.subtasks"
+              v-for="(subtask, subtaskIndex) in todo.subtasks"
               :key="subtask.id"
-              :class="{ completed: subtask.completed }"
+              :class="{ 
+                completed: subtask.completed, 
+                'drag-over': dragOverSubtaskData && 
+                             dragOverSubtaskData.todoIndex === index && 
+                             dragOverSubtaskData.subtaskIndex === subtaskIndex 
+              }"
+              draggable="true"
+              @dragstart="dragStartSubtask($event, index, subtaskIndex)"
+              @dragover.prevent="dragOverSubtask($event, index, subtaskIndex)"
+              @dragenter.prevent="dragEnterSubtask(index, subtaskIndex)"
+              @dragleave="dragLeaveSubtask()"
+              @drop="dropSubtask($event, index, subtaskIndex)"
+              @dragend="dragEndSubtask()"
             >
               <div class="subtask-item">
+                <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
                 <button class="icon-button" @click="toggleSubtask(todo, subtask)">✓</button>
                 <div class="subtask-content">
                   <div class="subtask-main">
@@ -106,6 +131,12 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const toast = useToast();
+
+    // Drag and drop state
+    const draggedIndex = ref(null);
+    const dragOverIndex = ref(null);
+    const draggedSubtaskData = ref(null);
+    const dragOverSubtaskData = ref(null);
 
     const goBack = () => {
       router.push('/');
@@ -372,6 +403,86 @@ export default {
       document.body.removeChild(link);
     };
 
+    // Drag and drop methods for todos
+    const dragStart = (event, index) => {
+      draggedIndex.value = index;
+      event.dataTransfer.effectAllowed = 'move';
+      // Add a custom class to the dragged item
+      event.target.classList.add('dragging');
+    };
+
+    const dragOver = (event, index) => {
+      event.dataTransfer.dropEffect = 'move';
+    };
+
+    const dragEnter = (index) => {
+      dragOverIndex.value = index;
+    };
+
+    const dragLeave = () => {
+      dragOverIndex.value = null;
+    };
+
+    const drop = (event, index) => {
+      if (draggedIndex.value !== null) {
+        store.commit('reorderTodos', {
+          fromIndex: draggedIndex.value,
+          toIndex: index
+        });
+      }
+      dragOverIndex.value = null;
+    };
+
+    const dragEnd = () => {
+      // Remove the custom class from all items
+      document.querySelectorAll('.todo-list > li').forEach(item => {
+        item.classList.remove('dragging');
+      });
+      draggedIndex.value = null;
+    };
+
+    // Drag and drop methods for subtasks
+    const dragStartSubtask = (event, todoIndex, subtaskIndex) => {
+      draggedSubtaskData.value = { todoIndex, subtaskIndex };
+      event.dataTransfer.effectAllowed = 'move';
+      // Add a custom class to the dragged item
+      event.target.classList.add('dragging');
+    };
+
+    const dragOverSubtask = (event, todoIndex, subtaskIndex) => {
+      event.dataTransfer.dropEffect = 'move';
+    };
+
+    const dragEnterSubtask = (todoIndex, subtaskIndex) => {
+      dragOverSubtaskData.value = { todoIndex, subtaskIndex };
+    };
+
+    const dragLeaveSubtask = () => {
+      dragOverSubtaskData.value = null;
+    };
+
+    const dropSubtask = (event, todoIndex, subtaskIndex) => {
+      if (draggedSubtaskData.value !== null) {
+        // Only allow reordering within the same todo
+        if (draggedSubtaskData.value.todoIndex === todoIndex) {
+          store.commit('reorderSubtasks', {
+            todo: todos.value[todoIndex],
+            fromIndex: draggedSubtaskData.value.subtaskIndex,
+            toIndex: subtaskIndex
+          });
+        }
+      }
+      dragOverSubtaskData.value = null;
+    };
+
+    const dragEndSubtask = () => {
+      // Remove the custom class from all items
+      document.querySelectorAll('.subtask-list > li').forEach(item => {
+        item.classList.remove('dragging');
+      });
+      draggedSubtaskData.value = null;
+    };
+
     return {
       newTodo,
       todos,
@@ -394,7 +505,24 @@ export default {
       setDeadline,
       setSubtaskDeadline,
       formatDeadline,
-      isOverdue
+      isOverdue,
+      // Drag and drop state and methods
+      draggedIndex,
+      dragOverIndex,
+      draggedSubtaskData,
+      dragOverSubtaskData,
+      dragStart,
+      dragOver,
+      dragEnter,
+      dragLeave,
+      drop,
+      dragEnd,
+      dragStartSubtask,
+      dragOverSubtask,
+      dragEnterSubtask,
+      dragLeaveSubtask,
+      dropSubtask,
+      dragEndSubtask
     };
   }
 };
@@ -520,6 +648,24 @@ export default {
   margin: 4px 0;
   background-color: #f5f5f5;
   border-radius: 4px;
+  cursor: grab;
+}
+
+.todo-list > li.dragging, .subtask-list > li.dragging {
+  opacity: 0.5;
+  background-color: #e0e0e0;
+}
+
+.todo-list > li.drag-over, .subtask-list > li.drag-over {
+  border-top: 2px solid #1a73e8;
+}
+
+.drag-handle {
+  color: #aaa;
+  margin-right: 8px;
+  cursor: grab;
+  font-size: 16px;
+  user-select: none;
 }
 
 .todo-content, .subtask-content {
