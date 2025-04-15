@@ -32,19 +32,31 @@
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
               <div class="todo-main">
-                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
-                  <PriorityIndicator :priority="todo.priority" />
-                  {{ todo.text }}
-                </span>
-                <input
-                  v-else
-                  type="text"
-                  v-model="todo.editText"
-                  @blur="finishEditing(todo)"
-                  @keyup.enter="finishEditing(todo)"
-                  @keyup.esc="cancelEditing(todo)"
-                  class="todo-input"
-                />
+                <div class="todo-info">
+                  <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
+                    <PriorityIndicator :priority="todo.priority" />
+                    {{ todo.text }}
+                  </span>
+                  <input
+                    v-else
+                    type="text"
+                    v-model="todo.editText"
+                    @blur="finishEditing(todo)"
+                    @keyup.enter="finishEditing(todo)"
+                    @keyup.esc="cancelEditing(todo)"
+                    class="todo-input"
+                  />
+                  <div class="todo-badges" v-if="todo.deadline || todo.priority">
+                    <div v-if="todo.deadline" :class="['deadline-badge', { 'overdue': isOverdue(todo.deadline) }]">
+                      <span class="deadline-icon">⏰</span>
+                      <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
+                    </div>
+                    <div v-if="todo.priority" :class="['priority-badge', todo.priority.toLowerCase()]">
+                      <PriorityIndicator :priority="todo.priority" />
+                      <span class="priority-label">{{ todo.priority }}</span>
+                    </div>
+                  </div>
+                </div>
                 <div class="todo-actions">
                   <button class="icon-button" @click="startEditing(todo)">✎</button>
                   <button class="icon-button" @click="addSubtask(todo)">+</button>
@@ -57,16 +69,6 @@
                     @update:priority="(priority) => updateTodoPriority(todo, priority)" 
                   />
                   <button class="icon-button" @click="deleteTodo(todo)">×</button>
-                </div>
-              </div>
-              <div class="todo-details" v-if="todo.deadline || todo.priority">
-                <div v-if="todo.deadline" :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
-                  <span class="deadline-icon">⏰</span>
-                  <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
-                </div>
-                <div v-if="todo.priority" :class="['priority-info', todo.priority.toLowerCase()]">
-                  <PriorityIndicator :priority="todo.priority" />
-                  <span class="priority-label">{{ todo.priority }}</span>
                 </div>
               </div>
             </div>
@@ -94,28 +96,30 @@
                 <button class="icon-button" @click="toggleSubtask(todo, subtask)">✓</button>
                 <div class="subtask-content">
                   <div class="subtask-main">
-                    <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
-                      {{ subtask.text }}
-                    </span>
-                    <input
-                      v-else
-                      type="text"
-                      v-model="subtask.editText"
-                      @blur="finishEditingSubtask(todo, subtask)"
-                      @keyup.enter="finishEditingSubtask(todo, subtask)"
-                      @keyup.esc="cancelEditingSubtask(subtask)"
-                      class="subtask-input"
-                    />
+                    <div class="subtask-info">
+                      <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
+                        {{ subtask.text }}
+                      </span>
+                      <input
+                        v-else
+                        type="text"
+                        v-model="subtask.editText"
+                        @blur="finishEditingSubtask(todo, subtask)"
+                        @keyup.enter="finishEditingSubtask(todo, subtask)"
+                        @keyup.esc="cancelEditingSubtask(subtask)"
+                        class="subtask-input"
+                      />
+                      <div class="subtask-badges" v-if="subtask.deadline">
+                        <div :class="['deadline-badge', { 'overdue': isOverdue(subtask.deadline) }]">
+                          <span class="deadline-icon">⏰</span>
+                          <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
+                        </div>
+                      </div>
+                    </div>
                     <div class="subtask-actions">
                       <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
                       <button class="icon-button deadline-btn" @click="setSubtaskDeadline(todo, subtask)">📅</button>
                       <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
-                    </div>
-                  </div>
-                  <div class="subtask-details" v-if="subtask.deadline">
-                    <div :class="['deadline-info', { 'overdue': isOverdue(subtask.deadline) }]">
-                      <span class="deadline-icon">⏰</span>
-                      <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
                     </div>
                   </div>
                 </div>
@@ -489,7 +493,7 @@ export default {
 
 <style scoped>
 .todo-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -602,12 +606,13 @@ export default {
 
 .todo-item, .subtask-item {
   display: flex;
-  align-items: center;
-  padding: 8px;
-  margin: 4px 0;
+  align-items: flex-start;
+  padding: 12px;
+  margin: 6px 0;
   background-color: #f5f5f5;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: grab;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .todo-list > li.dragging, .subtask-list > li.dragging {
@@ -637,14 +642,30 @@ export default {
 
 .todo-main, .subtask-main {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
+}
+
+.todo-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; /* Allows text to truncate properly */
 }
 
 .todo-text, .subtask-text {
   flex: 1;
   font-size: 1em;
+  margin-bottom: 4px;
+}
+
+.todo-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .todo-input, .subtask-input {
@@ -656,11 +677,24 @@ export default {
 }
 
 .todo-details, .subtask-details {
-  margin-left: 4px;
-  font-size: 0.85em;
+  display: none; /* Hide the old details section since we're now using badges */
 }
 
-.deadline-info {
+.subtask-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; /* Allows text to truncate properly */
+}
+
+.subtask-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.deadline-badge, .deadline-info {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -668,9 +702,11 @@ export default {
   border-radius: 12px;
   background-color: #e8f0fe;
   color: #1a73e8;
+  font-size: 0.85em;
+  white-space: nowrap;
 }
 
-.deadline-info.overdue {
+.deadline-badge.overdue, .deadline-info.overdue {
   background-color: #fde8e8;
   color: #dc3545;
 }
@@ -687,6 +723,8 @@ export default {
   display: flex;
   gap: 5px;
   margin-left: auto;
+  flex-shrink: 0;
+  align-self: center;
 }
 
 .deadline-btn {
@@ -777,35 +815,34 @@ input[type="text"] {
   position: relative;
 }
 
-.priority-info {
+.priority-badge, .priority-info {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 0.8em;
-  margin-right: 10px;
-  margin-top: 5px;
+  white-space: nowrap;
 }
 
-.priority-info.critical {
+.priority-badge.critical, .priority-info.critical {
   background-color: rgba(211, 47, 47, 0.1);
   color: #d32f2f;
   border: 1px solid rgba(211, 47, 47, 0.3);
 }
 
-.priority-info.high {
+.priority-badge.high, .priority-info.high {
   background-color: rgba(245, 124, 0, 0.1);
   color: #f57c00;
   border: 1px solid rgba(245, 124, 0, 0.3);
 }
 
-.priority-info.medium {
+.priority-badge.medium, .priority-info.medium {
   background-color: rgba(251, 192, 45, 0.1);
   color: #fbc02d;
   border: 1px solid rgba(251, 192, 45, 0.3);
 }
 
-.priority-info.low {
+.priority-badge.low, .priority-info.low {
   background-color: rgba(56, 142, 60, 0.1);
   color: #388e3c;
   border: 1px solid rgba(56, 142, 60, 0.3);
@@ -816,8 +853,6 @@ input[type="text"] {
 }
 
 .todo-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: none; /* Hide the old details section since we're now using badges */
 }
 </style>
