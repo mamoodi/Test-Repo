@@ -8,6 +8,7 @@ A feature-rich TODO application built with Vue.js that helps you manage your tas
 - Add new TODO items through the input field (Enter key or Add button)
 - Mark tasks as complete with a checkmark button (✓)
 - Edit existing tasks by clicking the pencil icon (✎)
+- Set task priority (Critical, High, Medium, Low) with the priority button (🔥)
 - Delete tasks with confirmation dialog
 - Duplicate detection: Prevents adding identical tasks with error notification
 - Tasks maintain their state even after page refresh
@@ -22,6 +23,7 @@ A feature-rich TODO application built with Vue.js that helps you manage your tas
 
 ### Visual Feedback
 - Completed items show with strikethrough style
+- Color-coded priority indicators (Critical: 🔴, High: 🟠, Medium: 🟡, Low: 🟢)
 - Toast notifications for duplicate items
 - Confirmation dialogs for destructive actions (delete/clear)
 - Clear visual hierarchy between tasks and subtasks
@@ -31,6 +33,7 @@ A feature-rich TODO application built with Vue.js that helps you manage your tas
 - Export your TODO list to CSV format including:
   - Task descriptions
   - Completion status
+  - Priority level
   - Subtasks with their status
 - Automatic saving to local storage
 - Data persistence across browser sessions
@@ -41,6 +44,8 @@ A feature-rich TODO application built with Vue.js that helps you manage your tas
    - Toggle completion (✓)
    - Edit text (✎)
    - Add subtasks (+)
+   - Set deadline (📅)
+   - Set priority (🔥)
    - Delete (×)
 3. Manage your list using the bottom buttons:
    - Clear List: Removes all tasks (with confirmation)
