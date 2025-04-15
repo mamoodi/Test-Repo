@@ -33,19 +33,21 @@
             <div class="todo-content">
               <div class="todo-main">
                 <div class="todo-info">
-                  <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
-                    <PriorityIndicator :priority="todo.priority" />
-                    {{ todo.text }}
-                  </span>
-                  <input
-                    v-else
-                    type="text"
-                    v-model="todo.editText"
-                    @blur="finishEditing(todo)"
-                    @keyup.enter="finishEditing(todo)"
-                    @keyup.esc="cancelEditing(todo)"
-                    class="todo-input"
-                  />
+                  <div class="todo-text-container">
+                    <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
+                      <PriorityIndicator :priority="todo.priority" />
+                      {{ todo.text }}
+                    </span>
+                    <input
+                      v-else
+                      type="text"
+                      v-model="todo.editText"
+                      @blur="finishEditing(todo)"
+                      @keyup.enter="finishEditing(todo)"
+                      @keyup.esc="cancelEditing(todo)"
+                      class="todo-input"
+                    />
+                  </div>
                   <div class="todo-badges" v-if="todo.deadline || todo.priority">
                     <div v-if="todo.deadline" :class="['deadline-badge', { 'overdue': isOverdue(todo.deadline) }]">
                       <span class="deadline-icon">⏰</span>
@@ -97,18 +99,20 @@
                 <div class="subtask-content">
                   <div class="subtask-main">
                     <div class="subtask-info">
-                      <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
-                        {{ subtask.text }}
-                      </span>
-                      <input
-                        v-else
-                        type="text"
-                        v-model="subtask.editText"
-                        @blur="finishEditingSubtask(todo, subtask)"
-                        @keyup.enter="finishEditingSubtask(todo, subtask)"
-                        @keyup.esc="cancelEditingSubtask(subtask)"
-                        class="subtask-input"
-                      />
+                      <div class="subtask-text-container">
+                        <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
+                          {{ subtask.text }}
+                        </span>
+                        <input
+                          v-else
+                          type="text"
+                          v-model="subtask.editText"
+                          @blur="finishEditingSubtask(todo, subtask)"
+                          @keyup.enter="finishEditingSubtask(todo, subtask)"
+                          @keyup.esc="cancelEditingSubtask(subtask)"
+                          class="subtask-input"
+                        />
+                      </div>
                       <div class="subtask-badges" v-if="subtask.deadline">
                         <div :class="['deadline-badge', { 'overdue': isOverdue(subtask.deadline) }]">
                           <span class="deadline-icon">⏰</span>
@@ -607,12 +611,12 @@ export default {
 .todo-item, .subtask-item {
   display: flex;
   align-items: flex-start;
-  padding: 12px;
-  margin: 6px 0;
+  padding: 10px;
+  margin: 5px 0;
   background-color: #f5f5f5;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: grab;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .todo-list > li.dragging, .subtask-list > li.dragging {
@@ -650,22 +654,32 @@ export default {
 
 .todo-info {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   flex: 1;
   min-width: 0; /* Allows text to truncate properly */
+  gap: 12px;
+}
+
+.todo-text-container {
+  flex: 1;
+  min-width: 0; /* Ensures text can truncate */
 }
 
 .todo-text, .subtask-text {
-  flex: 1;
+  display: inline-block;
   font-size: 1em;
-  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .todo-badges {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
-  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .todo-input, .subtask-input {
@@ -682,28 +696,36 @@ export default {
 
 .subtask-info {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   flex: 1;
   min-width: 0; /* Allows text to truncate properly */
+  gap: 12px;
+}
+
+.subtask-text-container {
+  flex: 1;
+  min-width: 0; /* Ensures text can truncate */
 }
 
 .subtask-badges {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
-  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .deadline-badge, .deadline-info {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
   background-color: #e8f0fe;
   color: #1a73e8;
-  font-size: 0.85em;
+  font-size: 0.75em;
   white-space: nowrap;
+  border: none;
 }
 
 .deadline-badge.overdue, .deadline-info.overdue {
@@ -818,34 +840,34 @@ input[type="text"] {
 .priority-badge, .priority-info {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
   white-space: nowrap;
 }
 
 .priority-badge.critical, .priority-info.critical {
   background-color: rgba(211, 47, 47, 0.1);
   color: #d32f2f;
-  border: 1px solid rgba(211, 47, 47, 0.3);
+  border: none;
 }
 
 .priority-badge.high, .priority-info.high {
   background-color: rgba(245, 124, 0, 0.1);
   color: #f57c00;
-  border: 1px solid rgba(245, 124, 0, 0.3);
+  border: none;
 }
 
 .priority-badge.medium, .priority-info.medium {
   background-color: rgba(251, 192, 45, 0.1);
   color: #fbc02d;
-  border: 1px solid rgba(251, 192, 45, 0.3);
+  border: none;
 }
 
 .priority-badge.low, .priority-info.low {
   background-color: rgba(56, 142, 60, 0.1);
   color: #388e3c;
-  border: 1px solid rgba(56, 142, 60, 0.3);
+  border: none;
 }
 
 .priority-icon {
