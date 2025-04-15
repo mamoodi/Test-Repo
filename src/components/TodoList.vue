@@ -32,7 +32,12 @@
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
               <div class="todo-main">
-                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">{{ todo.text }}</span>
+                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
+                  <span v-if="todo.priority" :class="['priority-indicator', todo.priority.toLowerCase()]" :title="`Priority: ${todo.priority}`">
+                    {{ getPriorityIcon(todo.priority) }}
+                  </span>
+                  {{ todo.text }}
+                </span>
                 <input
                   v-else
                   type="text"
@@ -46,13 +51,24 @@
                   <button class="icon-button" @click="startEditing(todo)">✎</button>
                   <button class="icon-button" @click="addSubtask(todo)">+</button>
                   <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
+                  <button class="icon-button priority-btn" @click="togglePriorityMenu(todo)">🔥</button>
+                  <div v-if="todo.showPriorityMenu" class="priority-menu">
+                    <div class="priority-option critical" @click="setPriority(todo, 'Critical')">Critical</div>
+                    <div class="priority-option high" @click="setPriority(todo, 'High')">High</div>
+                    <div class="priority-option medium" @click="setPriority(todo, 'Medium')">Medium</div>
+                    <div class="priority-option low" @click="setPriority(todo, 'Low')">Low</div>
+                  </div>
                   <button class="icon-button" @click="deleteTodo(todo)">×</button>
                 </div>
               </div>
-              <div class="todo-details" v-if="todo.deadline">
-                <div :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
+              <div class="todo-details" v-if="todo.deadline || todo.priority">
+                <div v-if="todo.deadline" :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
                   <span class="deadline-icon">⏰</span>
                   <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
+                </div>
+                <div v-if="todo.priority" :class="['priority-info', todo.priority.toLowerCase()]">
+                  <span class="priority-icon">{{ getPriorityIcon(todo.priority) }}</span>
+                  <span class="priority-label">{{ todo.priority }}</span>
                 </div>
               </div>
             </div>
@@ -177,7 +193,9 @@ export default {
           completed: false,
           subtasks: [],
           editing: false,
-          deadline: null
+          deadline: null,
+          priority: 'Medium', // Default priority
+          showPriorityMenu: false
         });
         newTodo.value = '';
       }
@@ -370,22 +388,29 @@ export default {
 
     const exportToCSV = () => {
       const rows = [];
-      rows.push(['Task', 'Status', 'Subtask', 'Subtask Status']);
+      rows.push(['Task', 'Status', 'Priority', 'Subtask', 'Subtask Status']);
       
       todos.value.forEach(todo => {
         if (todo.subtasks.length === 0) {
-          rows.push([todo.text, todo.completed ? 'Completed' : 'Pending', '', '']);
+          rows.push([
+            todo.text, 
+            todo.completed ? 'Completed' : 'Pending', 
+            todo.priority || 'Medium', 
+            '', 
+            ''
+          ]);
         } else {
           todo.subtasks.forEach((subtask, index) => {
             if (index === 0) {
               rows.push([
                 todo.text,
                 todo.completed ? 'Completed' : 'Pending',
+                todo.priority || 'Medium',
                 subtask.text,
                 subtask.completed ? 'Completed' : 'Pending'
               ]);
             } else {
-              rows.push(['', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
+              rows.push(['', '', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
             }
           });
         }
@@ -482,6 +507,51 @@ export default {
       });
       draggedSubtaskData.value = null;
     };
+    
+    // Priority management methods
+    const togglePriorityMenu = (todo) => {
+      // Close all other priority menus first
+      todos.value.forEach(t => {
+        if (t !== todo) t.showPriorityMenu = false;
+      });
+      
+      // Toggle the menu for this todo
+      todo.showPriorityMenu = !todo.showPriorityMenu;
+      
+      // Add a click event listener to close the menu when clicking outside
+      if (todo.showPriorityMenu) {
+        nextTick(() => {
+          const closeMenu = (e) => {
+            const menu = document.querySelector('.priority-menu');
+            const button = document.querySelector('.priority-btn');
+            if (menu && !menu.contains(e.target) && !button.contains(e.target)) {
+              todo.showPriorityMenu = false;
+              document.removeEventListener('click', closeMenu);
+            }
+          };
+          
+          // Use setTimeout to avoid the current click event from immediately closing the menu
+          setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+          }, 0);
+        });
+      }
+    };
+    
+    const setPriority = (todo, priority) => {
+      todo.priority = priority;
+      todo.showPriorityMenu = false;
+    };
+    
+    const getPriorityIcon = (priority) => {
+      switch (priority) {
+        case 'Critical': return '🔴';
+        case 'High': return '🟠';
+        case 'Medium': return '🟡';
+        case 'Low': return '🟢';
+        default: return '';
+      }
+    };
 
     return {
       newTodo,
@@ -504,6 +574,9 @@ export default {
       goBack,
       setDeadline,
       setSubtaskDeadline,
+      togglePriorityMenu,
+      setPriority,
+      getPriorityIcon,
       formatDeadline,
       isOverdue,
       // Drag and drop state and methods
@@ -759,5 +832,106 @@ input[type="text"] {
   font-size: 14px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+/* Priority styles */
+.priority-btn {
+  position: relative;
+}
+
+.priority-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 120px;
+}
+
+.priority-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.priority-option:hover {
+  background-color: #f5f5f5;
+}
+
+.priority-option.critical {
+  color: #d32f2f;
+  border-left: 3px solid #d32f2f;
+}
+
+.priority-option.high {
+  color: #f57c00;
+  border-left: 3px solid #f57c00;
+}
+
+.priority-option.medium {
+  color: #fbc02d;
+  border-left: 3px solid #fbc02d;
+}
+
+.priority-option.low {
+  color: #388e3c;
+  border-left: 3px solid #388e3c;
+}
+
+.priority-indicator {
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 0.9em;
+}
+
+.todo-item {
+  position: relative;
+}
+
+.priority-info {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  margin-right: 10px;
+  margin-top: 5px;
+}
+
+.priority-info.critical {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
+  border: 1px solid rgba(211, 47, 47, 0.3);
+}
+
+.priority-info.high {
+  background-color: rgba(245, 124, 0, 0.1);
+  color: #f57c00;
+  border: 1px solid rgba(245, 124, 0, 0.3);
+}
+
+.priority-info.medium {
+  background-color: rgba(251, 192, 45, 0.1);
+  color: #fbc02d;
+  border: 1px solid rgba(251, 192, 45, 0.3);
+}
+
+.priority-info.low {
+  background-color: rgba(56, 142, 60, 0.1);
+  color: #388e3c;
+  border: 1px solid rgba(56, 142, 60, 0.3);
+}
+
+.priority-icon {
+  margin-right: 4px;
+}
+
+.todo-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>
