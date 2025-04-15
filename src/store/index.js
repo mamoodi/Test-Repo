@@ -61,6 +61,9 @@ export default createStore({
     updateTodoDeadline(state, { todo, deadline }) {
       todo.deadline = deadline;
     },
+    updateTodoPriority(state, { todo, priority }) {
+      todo.priority = priority;
+    },
     updateSubtaskDeadline(state, { subtask, deadline }) {
       subtask.deadline = deadline;
     },

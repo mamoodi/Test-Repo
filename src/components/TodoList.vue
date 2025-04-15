@@ -33,9 +33,7 @@
             <div class="todo-content">
               <div class="todo-main">
                 <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
-                  <span v-if="todo.priority" :class="['priority-indicator', todo.priority.toLowerCase()]" :title="`Priority: ${todo.priority}`">
-                    {{ getPriorityIcon(todo.priority) }}
-                  </span>
+                  <PriorityIndicator :priority="todo.priority" />
                   {{ todo.text }}
                 </span>
                 <input
@@ -50,14 +48,14 @@
                 <div class="todo-actions">
                   <button class="icon-button" @click="startEditing(todo)">✎</button>
                   <button class="icon-button" @click="addSubtask(todo)">+</button>
-                  <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
-                  <button class="icon-button priority-btn" @click="togglePriorityMenu(todo)">🔥</button>
-                  <div v-if="todo.showPriorityMenu" class="priority-menu">
-                    <div class="priority-option critical" @click="setPriority(todo, 'Critical')">Critical</div>
-                    <div class="priority-option high" @click="setPriority(todo, 'High')">High</div>
-                    <div class="priority-option medium" @click="setPriority(todo, 'Medium')">Medium</div>
-                    <div class="priority-option low" @click="setPriority(todo, 'Low')">Low</div>
-                  </div>
+                  <DeadlineSelector 
+                    :deadline="todo.deadline" 
+                    @update:deadline="(deadline) => updateTodoDeadline(todo, deadline)" 
+                  />
+                  <PrioritySelector 
+                    :priority="todo.priority" 
+                    @update:priority="(priority) => updateTodoPriority(todo, priority)" 
+                  />
                   <button class="icon-button" @click="deleteTodo(todo)">×</button>
                 </div>
               </div>
@@ -67,7 +65,7 @@
                   <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
                 </div>
                 <div v-if="todo.priority" :class="['priority-info', todo.priority.toLowerCase()]">
-                  <span class="priority-icon">{{ getPriorityIcon(todo.priority) }}</span>
+                  <PriorityIndicator :priority="todo.priority" />
                   <span class="priority-label">{{ todo.priority }}</span>
                 </div>
               </div>
@@ -139,9 +137,19 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import PrioritySelector from './PrioritySelector.vue';
+import PriorityIndicator from './PriorityIndicator.vue';
+import DeadlineSelector from './DeadlineSelector.vue';
+import { formatDate, isDateOverdue, isValidDateFormat, getTodayDateString } from '../utils/dateUtils';
+import { exportTodosToCSV } from '../utils/exportUtils';
 
 export default {
   name: 'TodoList',
+  components: {
+    PrioritySelector,
+    PriorityIndicator,
+    DeadlineSelector
+  },
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -202,48 +210,20 @@ export default {
     };
 
     const formatDeadline = (deadline) => {
-      // Fix timezone issue by ensuring the date is interpreted in local time
-      // Add 'T12:00:00' to ensure it's noon in local time, avoiding any date shift
-      const localDateStr = deadline + 'T12:00:00';
-      const date = new Date(localDateStr);
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
-      });
+      return formatDate(deadline);
     };
 
     const isOverdue = (deadline) => {
-      // Use the same approach as formatDeadline for consistent date handling
-      const localDateStr = deadline + 'T12:00:00';
-      return new Date(localDateStr) < new Date();
+      return isDateOverdue(deadline);
     };
 
     const setDeadline = (todo) => {
-      let currentDate;
-      if (todo.deadline) {
-        // Use the same approach for consistent date handling
-        const localDateStr = todo.deadline + 'T12:00:00';
-        currentDate = new Date(localDateStr);
-      } else {
-        currentDate = new Date();
-      }
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = todo.deadline || getTodayDateString();
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        // Validate the date format
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(newDeadline)) {
-          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
-          return;
-        }
-        
-        // Create a date object to validate the date is real
-        const localDateStr = newDeadline + 'T12:00:00';
-        const date = new Date(localDateStr);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter a valid date');
+        if (!isValidDateFormat(newDeadline)) {
+          store.dispatch('showToast', 'Please enter a valid date in YYYY-MM-DD format');
           return;
         }
         
@@ -252,30 +232,12 @@ export default {
     };
 
     const setSubtaskDeadline = (todo, subtask) => {
-      let currentDate;
-      if (subtask.deadline) {
-        // Use the same approach for consistent date handling
-        const localDateStr = subtask.deadline + 'T12:00:00';
-        currentDate = new Date(localDateStr);
-      } else {
-        currentDate = new Date();
-      }
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = subtask.deadline || getTodayDateString();
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        // Validate the date format
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(newDeadline)) {
-          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
-          return;
-        }
-        
-        // Create a date object to validate the date is real
-        const localDateStr = newDeadline + 'T12:00:00';
-        const date = new Date(localDateStr);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter a valid date');
+        if (!isValidDateFormat(newDeadline)) {
+          store.dispatch('showToast', 'Please enter a valid date in YYYY-MM-DD format');
           return;
         }
         
@@ -387,45 +349,7 @@ export default {
     };
 
     const exportToCSV = () => {
-      const rows = [];
-      rows.push(['Task', 'Status', 'Priority', 'Subtask', 'Subtask Status']);
-      
-      todos.value.forEach(todo => {
-        if (todo.subtasks.length === 0) {
-          rows.push([
-            todo.text, 
-            todo.completed ? 'Completed' : 'Pending', 
-            todo.priority || 'Medium', 
-            '', 
-            ''
-          ]);
-        } else {
-          todo.subtasks.forEach((subtask, index) => {
-            if (index === 0) {
-              rows.push([
-                todo.text,
-                todo.completed ? 'Completed' : 'Pending',
-                todo.priority || 'Medium',
-                subtask.text,
-                subtask.completed ? 'Completed' : 'Pending'
-              ]);
-            } else {
-              rows.push(['', '', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
-            }
-          });
-        }
-      });
-
-      const csvContent = rows.map(row => row.join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'todo-list.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      exportTodosToCSV(todos.value);
     };
 
     // Drag and drop methods for todos
@@ -509,48 +433,12 @@ export default {
     };
     
     // Priority management methods
-    const togglePriorityMenu = (todo) => {
-      // Close all other priority menus first
-      todos.value.forEach(t => {
-        if (t !== todo) t.showPriorityMenu = false;
-      });
-      
-      // Toggle the menu for this todo
-      todo.showPriorityMenu = !todo.showPriorityMenu;
-      
-      // Add a click event listener to close the menu when clicking outside
-      if (todo.showPriorityMenu) {
-        nextTick(() => {
-          const closeMenu = (e) => {
-            const menu = document.querySelector('.priority-menu');
-            const button = document.querySelector('.priority-btn');
-            if (menu && !menu.contains(e.target) && !button.contains(e.target)) {
-              todo.showPriorityMenu = false;
-              document.removeEventListener('click', closeMenu);
-            }
-          };
-          
-          // Use setTimeout to avoid the current click event from immediately closing the menu
-          setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-          }, 0);
-        });
-      }
+    const updateTodoDeadline = (todo, deadline) => {
+      store.commit('updateTodoDeadline', { todo, deadline });
     };
     
-    const setPriority = (todo, priority) => {
-      todo.priority = priority;
-      todo.showPriorityMenu = false;
-    };
-    
-    const getPriorityIcon = (priority) => {
-      switch (priority) {
-        case 'Critical': return '🔴';
-        case 'High': return '🟠';
-        case 'Medium': return '🟡';
-        case 'Low': return '🟢';
-        default: return '';
-      }
+    const updateTodoPriority = (todo, priority) => {
+      store.commit('updateTodoPriority', { todo, priority });
     };
 
     return {
@@ -572,11 +460,9 @@ export default {
       clearList,
       exportToCSV,
       goBack,
-      setDeadline,
       setSubtaskDeadline,
-      togglePriorityMenu,
-      setPriority,
-      getPriorityIcon,
+      updateTodoDeadline,
+      updateTodoPriority,
       formatDeadline,
       isOverdue,
       // Drag and drop state and methods
