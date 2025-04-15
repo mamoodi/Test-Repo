@@ -32,43 +32,44 @@
             <button class="icon-button" @click="toggleTodo(todo)">✓</button>
             <div class="todo-content">
               <div class="todo-main">
-                <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
-                  <span v-if="todo.priority" :class="['priority-indicator', todo.priority.toLowerCase()]" :title="`Priority: ${todo.priority}`">
-                    {{ getPriorityIcon(todo.priority) }}
-                  </span>
-                  {{ todo.text }}
-                </span>
-                <input
-                  v-else
-                  type="text"
-                  v-model="todo.editText"
-                  @blur="finishEditing(todo)"
-                  @keyup.enter="finishEditing(todo)"
-                  @keyup.esc="cancelEditing(todo)"
-                  class="todo-input"
-                />
+                <div class="todo-info">
+                  <div class="todo-text-container">
+                    <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
+                      {{ todo.text }}
+                    </span>
+                    <input
+                      v-else
+                      type="text"
+                      v-model="todo.editText"
+                      @blur="finishEditing(todo)"
+                      @keyup.enter="finishEditing(todo)"
+                      @keyup.esc="cancelEditing(todo)"
+                      class="todo-input"
+                    />
+                  </div>
+                  <div class="todo-badges" v-if="todo.deadline || todo.priority">
+                    <div v-if="todo.deadline" :class="['deadline-badge', { 'overdue': isOverdue(todo.deadline) }]">
+                      <span class="deadline-icon">⏰</span>
+                      <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
+                    </div>
+                    <div v-if="todo.priority" :class="['priority-badge', todo.priority.toLowerCase()]">
+                      <PriorityIndicator :priority="todo.priority" />
+                      <span class="priority-label">{{ todo.priority }}</span>
+                    </div>
+                  </div>
+                </div>
                 <div class="todo-actions">
                   <button class="icon-button" @click="startEditing(todo)">✎</button>
                   <button class="icon-button" @click="addSubtask(todo)">+</button>
-                  <button class="icon-button deadline-btn" @click="setDeadline(todo)">📅</button>
-                  <button class="icon-button priority-btn" @click="togglePriorityMenu(todo)">🔥</button>
-                  <div v-if="todo.showPriorityMenu" class="priority-menu">
-                    <div class="priority-option critical" @click="setPriority(todo, 'Critical')">Critical</div>
-                    <div class="priority-option high" @click="setPriority(todo, 'High')">High</div>
-                    <div class="priority-option medium" @click="setPriority(todo, 'Medium')">Medium</div>
-                    <div class="priority-option low" @click="setPriority(todo, 'Low')">Low</div>
-                  </div>
+                  <DeadlineSelector 
+                    :deadline="todo.deadline" 
+                    @update:deadline="(deadline) => updateTodoDeadline(todo, deadline)" 
+                  />
+                  <PrioritySelector 
+                    :priority="todo.priority" 
+                    @update:priority="(priority) => updateTodoPriority(todo, priority)" 
+                  />
                   <button class="icon-button" @click="deleteTodo(todo)">×</button>
-                </div>
-              </div>
-              <div class="todo-details" v-if="todo.deadline || todo.priority">
-                <div v-if="todo.deadline" :class="['deadline-info', { 'overdue': isOverdue(todo.deadline) }]">
-                  <span class="deadline-icon">⏰</span>
-                  <span class="deadline-date">Due {{ formatDeadline(todo.deadline) }}</span>
-                </div>
-                <div v-if="todo.priority" :class="['priority-info', todo.priority.toLowerCase()]">
-                  <span class="priority-icon">{{ getPriorityIcon(todo.priority) }}</span>
-                  <span class="priority-label">{{ todo.priority }}</span>
                 </div>
               </div>
             </div>
@@ -96,28 +97,32 @@
                 <button class="icon-button" @click="toggleSubtask(todo, subtask)">✓</button>
                 <div class="subtask-content">
                   <div class="subtask-main">
-                    <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
-                      {{ subtask.text }}
-                    </span>
-                    <input
-                      v-else
-                      type="text"
-                      v-model="subtask.editText"
-                      @blur="finishEditingSubtask(todo, subtask)"
-                      @keyup.enter="finishEditingSubtask(todo, subtask)"
-                      @keyup.esc="cancelEditingSubtask(subtask)"
-                      class="subtask-input"
-                    />
+                    <div class="subtask-info">
+                      <div class="subtask-text-container">
+                        <span v-if="!subtask.editing" @dblclick="startEditingSubtask(subtask)" class="subtask-text">
+                          {{ subtask.text }}
+                        </span>
+                        <input
+                          v-else
+                          type="text"
+                          v-model="subtask.editText"
+                          @blur="finishEditingSubtask(todo, subtask)"
+                          @keyup.enter="finishEditingSubtask(todo, subtask)"
+                          @keyup.esc="cancelEditingSubtask(subtask)"
+                          class="subtask-input"
+                        />
+                      </div>
+                      <div class="subtask-badges" v-if="subtask.deadline">
+                        <div :class="['deadline-badge', { 'overdue': isOverdue(subtask.deadline) }]">
+                          <span class="deadline-icon">⏰</span>
+                          <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
+                        </div>
+                      </div>
+                    </div>
                     <div class="subtask-actions">
                       <button class="icon-button" @click="startEditingSubtask(subtask)">✎</button>
                       <button class="icon-button deadline-btn" @click="setSubtaskDeadline(todo, subtask)">📅</button>
                       <button class="icon-button" @click="deleteSubtask(todo, subtask)">×</button>
-                    </div>
-                  </div>
-                  <div class="subtask-details" v-if="subtask.deadline">
-                    <div :class="['deadline-info', { 'overdue': isOverdue(subtask.deadline) }]">
-                      <span class="deadline-icon">⏰</span>
-                      <span class="deadline-date">Due {{ formatDeadline(subtask.deadline) }}</span>
                     </div>
                   </div>
                 </div>
@@ -139,9 +144,19 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import PrioritySelector from './PrioritySelector.vue';
+import PriorityIndicator from './PriorityIndicator.vue';
+import DeadlineSelector from './DeadlineSelector.vue';
+import { formatDate, isDateOverdue, isValidDateFormat, getTodayDateString } from '../utils/dateUtils';
+import { exportTodosToCSV } from '../utils/exportUtils';
 
 export default {
   name: 'TodoList',
+  components: {
+    PrioritySelector,
+    PriorityIndicator,
+    DeadlineSelector
+  },
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -202,48 +217,20 @@ export default {
     };
 
     const formatDeadline = (deadline) => {
-      // Fix timezone issue by ensuring the date is interpreted in local time
-      // Add 'T12:00:00' to ensure it's noon in local time, avoiding any date shift
-      const localDateStr = deadline + 'T12:00:00';
-      const date = new Date(localDateStr);
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
-      });
+      return formatDate(deadline);
     };
 
     const isOverdue = (deadline) => {
-      // Use the same approach as formatDeadline for consistent date handling
-      const localDateStr = deadline + 'T12:00:00';
-      return new Date(localDateStr) < new Date();
+      return isDateOverdue(deadline);
     };
 
     const setDeadline = (todo) => {
-      let currentDate;
-      if (todo.deadline) {
-        // Use the same approach for consistent date handling
-        const localDateStr = todo.deadline + 'T12:00:00';
-        currentDate = new Date(localDateStr);
-      } else {
-        currentDate = new Date();
-      }
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = todo.deadline || getTodayDateString();
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        // Validate the date format
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(newDeadline)) {
-          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
-          return;
-        }
-        
-        // Create a date object to validate the date is real
-        const localDateStr = newDeadline + 'T12:00:00';
-        const date = new Date(localDateStr);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter a valid date');
+        if (!isValidDateFormat(newDeadline)) {
+          store.dispatch('showToast', 'Please enter a valid date in YYYY-MM-DD format');
           return;
         }
         
@@ -252,30 +239,12 @@ export default {
     };
 
     const setSubtaskDeadline = (todo, subtask) => {
-      let currentDate;
-      if (subtask.deadline) {
-        // Use the same approach for consistent date handling
-        const localDateStr = subtask.deadline + 'T12:00:00';
-        currentDate = new Date(localDateStr);
-      } else {
-        currentDate = new Date();
-      }
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = subtask.deadline || getTodayDateString();
       const newDeadline = prompt('Enter deadline (YYYY-MM-DD):', dateStr);
       
       if (newDeadline) {
-        // Validate the date format
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(newDeadline)) {
-          store.dispatch('showToast', 'Please enter date in YYYY-MM-DD format');
-          return;
-        }
-        
-        // Create a date object to validate the date is real
-        const localDateStr = newDeadline + 'T12:00:00';
-        const date = new Date(localDateStr);
-        if (isNaN(date.getTime())) {
-          store.dispatch('showToast', 'Please enter a valid date');
+        if (!isValidDateFormat(newDeadline)) {
+          store.dispatch('showToast', 'Please enter a valid date in YYYY-MM-DD format');
           return;
         }
         
@@ -387,45 +356,7 @@ export default {
     };
 
     const exportToCSV = () => {
-      const rows = [];
-      rows.push(['Task', 'Status', 'Priority', 'Subtask', 'Subtask Status']);
-      
-      todos.value.forEach(todo => {
-        if (todo.subtasks.length === 0) {
-          rows.push([
-            todo.text, 
-            todo.completed ? 'Completed' : 'Pending', 
-            todo.priority || 'Medium', 
-            '', 
-            ''
-          ]);
-        } else {
-          todo.subtasks.forEach((subtask, index) => {
-            if (index === 0) {
-              rows.push([
-                todo.text,
-                todo.completed ? 'Completed' : 'Pending',
-                todo.priority || 'Medium',
-                subtask.text,
-                subtask.completed ? 'Completed' : 'Pending'
-              ]);
-            } else {
-              rows.push(['', '', '', subtask.text, subtask.completed ? 'Completed' : 'Pending']);
-            }
-          });
-        }
-      });
-
-      const csvContent = rows.map(row => row.join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'todo-list.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      exportTodosToCSV(todos.value);
     };
 
     // Drag and drop methods for todos
@@ -509,48 +440,12 @@ export default {
     };
     
     // Priority management methods
-    const togglePriorityMenu = (todo) => {
-      // Close all other priority menus first
-      todos.value.forEach(t => {
-        if (t !== todo) t.showPriorityMenu = false;
-      });
-      
-      // Toggle the menu for this todo
-      todo.showPriorityMenu = !todo.showPriorityMenu;
-      
-      // Add a click event listener to close the menu when clicking outside
-      if (todo.showPriorityMenu) {
-        nextTick(() => {
-          const closeMenu = (e) => {
-            const menu = document.querySelector('.priority-menu');
-            const button = document.querySelector('.priority-btn');
-            if (menu && !menu.contains(e.target) && !button.contains(e.target)) {
-              todo.showPriorityMenu = false;
-              document.removeEventListener('click', closeMenu);
-            }
-          };
-          
-          // Use setTimeout to avoid the current click event from immediately closing the menu
-          setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-          }, 0);
-        });
-      }
+    const updateTodoDeadline = (todo, deadline) => {
+      store.commit('updateTodoDeadline', { todo, deadline });
     };
     
-    const setPriority = (todo, priority) => {
-      todo.priority = priority;
-      todo.showPriorityMenu = false;
-    };
-    
-    const getPriorityIcon = (priority) => {
-      switch (priority) {
-        case 'Critical': return '🔴';
-        case 'High': return '🟠';
-        case 'Medium': return '🟡';
-        case 'Low': return '🟢';
-        default: return '';
-      }
+    const updateTodoPriority = (todo, priority) => {
+      store.commit('updateTodoPriority', { todo, priority });
     };
 
     return {
@@ -572,11 +467,9 @@ export default {
       clearList,
       exportToCSV,
       goBack,
-      setDeadline,
       setSubtaskDeadline,
-      togglePriorityMenu,
-      setPriority,
-      getPriorityIcon,
+      updateTodoDeadline,
+      updateTodoPriority,
       formatDeadline,
       isOverdue,
       // Drag and drop state and methods
@@ -603,7 +496,7 @@ export default {
 
 <style scoped>
 .todo-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -697,7 +590,7 @@ export default {
 }
 
 .todo-container .icon-button {
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 14px;
   background-color: transparent !important;
   color: #666;
@@ -716,12 +609,13 @@ export default {
 
 .todo-item, .subtask-item {
   display: flex;
-  align-items: center;
-  padding: 8px;
-  margin: 4px 0;
+  align-items: flex-start;
+  padding: 10px;
+  margin: 5px 0;
   background-color: #f5f5f5;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: grab;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .todo-list > li.dragging, .subtask-list > li.dragging {
@@ -751,14 +645,50 @@ export default {
 
 .todo-main, .subtask-main {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
+}
+
+.todo-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  min-width: 0; /* Allows text to truncate properly */
+  gap: 12px;
+}
+
+.todo-text-container {
+  flex: 1;
+  min-width: 0; /* Ensures text can truncate */
+  overflow: hidden;
+}
+
+.todo-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .todo-text, .subtask-text {
-  flex: 1;
+  display: inline-block;
   font-size: 1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.todo-badges {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  flex-shrink: 0;
+  max-width: 250px;
+  overflow: hidden;
 }
 
 .todo-input, .subtask-input {
@@ -770,21 +700,44 @@ export default {
 }
 
 .todo-details, .subtask-details {
-  margin-left: 4px;
-  font-size: 0.85em;
+  display: none; /* Hide the old details section since we're now using badges */
 }
 
-.deadline-info {
+.subtask-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  min-width: 0; /* Allows text to truncate properly */
+  gap: 12px;
+}
+
+.subtask-text-container {
+  flex: 1;
+  min-width: 0; /* Ensures text can truncate */
+}
+
+.subtask-badges {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.deadline-badge, .deadline-info {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
   background-color: #e8f0fe;
   color: #1a73e8;
+  font-size: 0.75em;
+  white-space: nowrap;
+  border: none;
 }
 
-.deadline-info.overdue {
+.deadline-badge.overdue, .deadline-info.overdue {
   background-color: #fde8e8;
   color: #dc3545;
 }
@@ -799,8 +752,10 @@ export default {
 
 .todo-actions, .subtask-actions {
   display: flex;
-  gap: 5px;
+  gap: 2px;
   margin-left: auto;
+  flex-shrink: 0;
+  align-self: center;
 }
 
 .deadline-btn {
@@ -891,38 +846,37 @@ input[type="text"] {
   position: relative;
 }
 
-.priority-info {
+.priority-badge, .priority-info {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  margin-right: 10px;
-  margin-top: 5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  white-space: nowrap;
 }
 
-.priority-info.critical {
+.priority-badge.critical, .priority-info.critical {
   background-color: rgba(211, 47, 47, 0.1);
   color: #d32f2f;
-  border: 1px solid rgba(211, 47, 47, 0.3);
+  border: none;
 }
 
-.priority-info.high {
+.priority-badge.high, .priority-info.high {
   background-color: rgba(245, 124, 0, 0.1);
   color: #f57c00;
-  border: 1px solid rgba(245, 124, 0, 0.3);
+  border: none;
 }
 
-.priority-info.medium {
+.priority-badge.medium, .priority-info.medium {
   background-color: rgba(251, 192, 45, 0.1);
   color: #fbc02d;
-  border: 1px solid rgba(251, 192, 45, 0.3);
+  border: none;
 }
 
-.priority-info.low {
+.priority-badge.low, .priority-info.low {
   background-color: rgba(56, 142, 60, 0.1);
   color: #388e3c;
-  border: 1px solid rgba(56, 142, 60, 0.3);
+  border: none;
 }
 
 .priority-icon {
@@ -930,8 +884,6 @@ input[type="text"] {
 }
 
 .todo-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: none; /* Hide the old details section since we're now using badges */
 }
 </style>
