@@ -1,10 +1,6 @@
 <template>
   <div class="deadline-container">
     <button class="icon-button deadline-btn" @click="promptDeadline">📅</button>
-    <div v-if="deadline" :class="['deadline-info', { 'overdue': isOverdue }]">
-      <span class="deadline-icon">⏰</span>
-      <span class="deadline-date">Due {{ formattedDeadline }}</span>
-    </div>
   </div>
 </template>
 
