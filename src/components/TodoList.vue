@@ -35,7 +35,6 @@
                 <div class="todo-info">
                   <div class="todo-text-container">
                     <span v-if="!todo.editing" @dblclick="startEditing(todo)" class="todo-text">
-                      <PriorityIndicator :priority="todo.priority" />
                       {{ todo.text }}
                     </span>
                     <input
@@ -664,6 +663,14 @@ export default {
 .todo-text-container {
   flex: 1;
   min-width: 0; /* Ensures text can truncate */
+  overflow: hidden;
+}
+
+.todo-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .todo-text, .subtask-text {
@@ -680,6 +687,8 @@ export default {
   flex-wrap: nowrap;
   gap: 8px;
   flex-shrink: 0;
+  max-width: 250px;
+  overflow: hidden;
 }
 
 .todo-input, .subtask-input {
