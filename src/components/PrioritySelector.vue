@@ -73,7 +73,7 @@ export default {
   border: none;
   cursor: pointer;
   font-size: 1.2em;
-  padding: 0.2em 0.5em;
+  padding: 0.2em 0.3em;
 }
 
 .priority-btn {

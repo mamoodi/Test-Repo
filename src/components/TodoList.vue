@@ -590,7 +590,7 @@ export default {
 }
 
 .todo-container .icon-button {
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 14px;
   background-color: transparent !important;
   color: #666;
@@ -752,7 +752,7 @@ export default {
 
 .todo-actions, .subtask-actions {
   display: flex;
-  gap: 5px;
+  gap: 2px;
   margin-left: auto;
   flex-shrink: 0;
   align-self: center;
