@@ -1,1 +1,1 @@
-Let's contribute together!
+Don't contribute
