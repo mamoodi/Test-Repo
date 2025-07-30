@@ -1,6 +1,6 @@
 <template>
   <div class="landing-container">
-    <h1>My Todo Lists</h1>
+    <h1>HELLO BUDDY!</h1>
     
     <div class="create-list">
       <h2>Create New List</h2>
