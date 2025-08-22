@@ -13,8 +13,8 @@ This microagent is triggered by the word "rowrow" and provides a simple response
 
 ## Instructions
 
-When triggered, please say "row your boat".
+When triggered, please say "row your boat"....and then draw an ascii art.
 
 ## Usage
 
-This microagent activates when the trigger word "rowrow" is mentioned in the conversation and responds with the phrase "row your boat".
+This microagent activates when the trigger word "rowrow" is mentioned in the conversation and responds with the phrase "row your boat" followed by ASCII art of a boat.
