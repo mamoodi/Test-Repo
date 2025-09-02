@@ -1,1 +1,1 @@
-We YOLO here
+YOLO IS THE WAY
